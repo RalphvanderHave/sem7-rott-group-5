@@ -1,46 +1,33 @@
 import { useState, useRef, useEffect } from 'react'
+import { Conversation } from '@11labs/client'
 import './App.css'
 
 function App() {
-  const [messages, setMessages] = useState([])
-  const [isListening, setIsListening] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [transcript, setTranscript] = useState('')
+  const [status, setStatus] = useState('disconnected')
+  const [messages, setMessages] = useState([])
+  const [volume, setVolume] = useState(0)
   
-  const audioRef = useRef(null)
+  const conversationRef = useRef(null)
+  const audioContextRef = useRef(null)
+  const analyserRef = useRef(null)
   const messagesEndRef = useRef(null)
-  const recognitionRef = useRef(null)
+  const volumeAnimationRef = useRef(null)
 
   const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
-  const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL' // Default voice (Sarah)
+  const AGENT_ID = import.meta.env.VITE_AGENT_ID
 
   useEffect(() => {
-    // Initialize Speech Recognition
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-      recognitionRef.current = new SpeechRecognition()
-      recognitionRef.current.continuous = false
-      recognitionRef.current.interimResults = true
-      recognitionRef.current.lang = 'en-US'
-
-      recognitionRef.current.onresult = (event) => {
-        const current = event.resultIndex
-        const transcriptText = event.results[current][0].transcript
-        setTranscript(transcriptText)
-        
-        if (event.results[current].isFinal) {
-          handleVoiceInput(transcriptText)
-        }
+    return () => {
+      if (conversationRef.current) {
+        conversationRef.current.endSession()
       }
-
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error)
-        setIsListening(false)
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
       }
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false)
+      if (volumeAnimationRef.current) {
+        cancelAnimationFrame(volumeAnimationRef.current)
       }
     }
   }, [])
@@ -49,133 +36,199 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const textToSpeech = async (text) => {
+  const addMessage = (role, content) => {
+    setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
+  }
+
+  const startConversation = async () => {
     try {
-      setIsSpeaking(true)
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
-        {
-          method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'Content-Type': 'application/json',
-            'xi-api-key': API_KEY
-          },
-          body: JSON.stringify({
-            text: text,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.5,
-              use_speaker_boost: true
+      if (!API_KEY || !AGENT_ID) {
+        throw new Error('Missing API key or Agent ID. Please check your .env file.')
+      }
+
+      if (AGENT_ID === 'paste_your_agent_id_here') {
+        throw new Error('Please replace VITE_AGENT_ID in .env with your actual Agent ID from ElevenLabs')
+      }
+
+      setStatus('connecting')
+      addMessage('system', '🔄 Connecting to AI agent...')
+
+      // Initialize audio context for volume monitoring
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
+        analyserRef.current = audioContextRef.current.createAnalyser()
+        analyserRef.current.fftSize = 256
+      }
+
+      // Request microphone permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      })
+
+      // Start the conversation
+      const conversation = await Conversation.startSession({
+        agentId: AGENT_ID,
+        apiKey: API_KEY,
+        
+        onConnect: () => {
+          console.log('✅ Connected to agent')
+          setIsConnected(true)
+          setStatus('connected')
+          addMessage('system', '✅ Connected! Start speaking to the AI agent...')
+        },
+        
+        onDisconnect: () => {
+          console.log('❌ Disconnected from agent')
+          setIsConnected(false)
+          setStatus('disconnected')
+          setVolume(0)
+          addMessage('system', '🔌 Disconnected from agent')
+        },
+        
+        onMessage: (message) => {
+          console.log('📨 Message received:', message)
+          
+          // Handle different message types
+          if (message.type === 'user_transcript' || message.message?.role === 'user') {
+            const text = message.text || message.message?.text || message.message?.content
+            if (text) {
+              addMessage('user', text)
             }
-          })
+          } else if (message.type === 'agent_response' || message.message?.role === 'assistant') {
+            const text = message.text || message.message?.text || message.message?.content
+            if (text) {
+              addMessage('assistant', text)
+            }
+          }
+        },
+        
+        onError: (error) => {
+          console.error('❌ Conversation error:', error)
+          setStatus('error')
+          addMessage('system', `⚠️ Error: ${error.message || 'Unknown error occurred'}`)
+        },
+        
+        onModeChange: (mode) => {
+          console.log('🔄 Mode changed:', mode)
+          const newMode = mode.mode || mode
+          setStatus(newMode)
+          setIsSpeaking(newMode === 'speaking')
         }
-      )
+      })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail?.message || 'Failed to generate speech')
+      conversationRef.current = conversation
+
+      // Set up volume monitoring
+      const source = audioContextRef.current.createMediaStreamSource(stream)
+      source.connect(analyserRef.current)
+
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
+      const updateVolume = () => {
+        if (analyserRef.current && isConnected) {
+          analyserRef.current.getByteFrequencyData(dataArray)
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length
+          setVolume(Math.min(100, (average / 255) * 200))
+          volumeAnimationRef.current = requestAnimationFrame(updateVolume)
+        }
       }
+      updateVolume()
 
-      const audioBlob = await response.blob()
-      const audioUrl = URL.createObjectURL(audioBlob)
+    } catch (error) {
+      console.error('❌ Failed to start conversation:', error)
+      setStatus('error')
+      setIsConnected(false)
       
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl
-        await audioRef.current.play()
+      let errorMessage = error.message
+      if (error.message.includes('API key')) {
+        errorMessage = 'Invalid API key. Please check your .env file.'
+      } else if (error.message.includes('Agent')) {
+        errorMessage = 'Invalid Agent ID. Please get your Agent ID from ElevenLabs dashboard.'
+      } else if (error.name === 'NotAllowedError') {
+        errorMessage = 'Microphone permission denied. Please allow microphone access.'
       }
-    } catch (error) {
-      console.error('Text-to-speech error:', error)
-      alert(`Voice generation failed: ${error.message}`)
-      setIsSpeaking(false)
+      
+      addMessage('system', `⚠️ ${errorMessage}`)
+      alert(`Failed to start conversation:\n\n${errorMessage}\n\nSteps:\n1. Get your Agent ID from https://elevenlabs.io/app/conversational-ai\n2. Update VITE_AGENT_ID in .env file\n3. Restart the dev server`)
     }
   }
 
-  const generateAIResponse = async (userInput) => {
-    // Simple AI responses - you can replace this with OpenAI, Anthropic, or your preferred AI API
-    const responses = [
-      `I heard you say: "${userInput}". That's interesting! How can I help you with that?`,
-      `Thanks for sharing "${userInput}". I'm here to assist you. What would you like to know?`,
-      `Regarding "${userInput}", I'd be happy to help. Could you tell me more?`,
-      `I understand you mentioned "${userInput}". Let me help you with that.`
-    ]
+  const endConversation = async () => {
+    if (conversationRef.current) {
+      try {
+        await conversationRef.current.endSession()
+      } catch (error) {
+        console.error('Error ending session:', error)
+      }
+      conversationRef.current = null
+      setIsConnected(false)
+      setStatus('disconnected')
+      setVolume(0)
+      addMessage('system', '👋 Conversation ended')
+    }
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    return responses[Math.floor(Math.random() * responses.length)]
-  }
-
-  const handleVoiceInput = async (transcriptText) => {
-    if (!transcriptText.trim()) return
-
-    setIsListening(false)
-    setIsProcessing(true)
-    setTranscript('')
-
-    const userMessage = { role: 'user', content: transcriptText }
-    setMessages(prev => [...prev, userMessage])
-
-    try {
-      // Generate AI response
-      const aiResponseText = await generateAIResponse(transcriptText)
-      const aiMessage = { role: 'assistant', content: aiResponseText }
-      setMessages(prev => [...prev, aiMessage])
-
-      // Convert AI response to speech
-      await textToSpeech(aiResponseText)
-    } catch (error) {
-      console.error('Error processing input:', error)
-      alert('Failed to process your request. Please try again.')
-    } finally {
-      setIsProcessing(false)
+    if (volumeAnimationRef.current) {
+      cancelAnimationFrame(volumeAnimationRef.current)
     }
   }
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.')
-      return
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop()
-      setIsListening(false)
-    } else {
-      recognitionRef.current.start()
-      setIsListening(true)
-      setTranscript('')
-    }
-  }
-
-  const handleAudioEnded = () => {
-    setIsSpeaking(false)
-  }
-
-  const stopSpeaking = () => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-      setIsSpeaking(false)
+  const getStatusDisplay = () => {
+    switch (status) {
+      case 'connecting':
+        return { text: '⏳ Connecting...', class: 'connecting' }
+      case 'connected':
+        return { text: '🟢 Connected - Ready to talk', class: 'connected' }
+      case 'listening':
+        return { text: '👂 Listening...', class: 'listening' }
+      case 'thinking':
+        return { text: '🤔 Processing...', class: 'thinking' }
+      case 'speaking':
+        return { text: '🗣️ Agent speaking...', class: 'speaking' }
+      case 'error':
+        return { text: '⚠️ Error occurred', class: 'error' }
+      default:
+        return { text: '⚪ Disconnected', class: 'disconnected' }
     }
   }
+
+  const statusInfo = getStatusDisplay()
 
   return (
     <div className="app">
       <div className="container">
         <header className="header">
           <h1>🤖 AI Voice Agent</h1>
-          <p>Powered by ElevenLabs</p>
+          <p>Real-time Conversational AI • Powered by ElevenLabs</p>
         </header>
+
+        <div className="status-indicator">
+          <div className={`status-badge ${statusInfo.class}`}>
+            {statusInfo.text}
+          </div>
+          {isConnected && (
+            <div className="volume-indicator">
+              <div 
+                className="volume-bar" 
+                style={{ width: `${volume}%` }}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="chat-container">
           <div className="messages">
             {messages.length === 0 && (
               <div className="welcome-message">
-                <h2>👋 Welcome!</h2>
-                <p>Click the microphone button and start speaking to interact with the AI voice agent.</p>
+                <h2>👋 Welcome to AI Voice Agent!</h2>
+                <p>Click "Start Conversation" to begin talking with your support agent in real-time.</p>
+                <div className="features">
+                  <div className="feature">🎤 Voice Input</div>
+                  <div className="feature">🔊 Voice Output</div>
+                  <div className="feature">⚡ Real-time Response</div>
+                </div>
               </div>
             )}
             {messages.map((msg, index) => (
@@ -185,7 +238,7 @@ function App() {
                 </div>
               </div>
             ))}
-            {isProcessing && (
+            {status === 'thinking' && (
               <div className="message assistant">
                 <div className="message-content typing">
                   <span></span><span></span><span></span>
@@ -195,47 +248,48 @@ function App() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="voice-controls">
-            {transcript && isListening && (
-              <div className="transcript-preview">
-                {transcript}
-              </div>
-            )}
-            
-            <button 
-              onClick={toggleListening}
-              disabled={isProcessing || isSpeaking}
-              className={`voice-button ${isListening ? 'listening' : ''}`}
-            ></button>
-            <button>
-              {isListening ? '🎤 Listening...' : '🎤 Tap to Speak'}
-            </button>
-
-            {isSpeaking && (
+          <div className="controls">
+            {!isConnected ? (
               <button 
-                onClick={stopSpeaking}
-                className="stop-button"
+                onClick={startConversation}
+                className="main-button start"
+                disabled={status === 'connecting'}
               >
-                🔇 Stop Speaking
+                {status === 'connecting' ? '⏳ Connecting...' : '🎙️ Start Conversation'}
               </button>
+            ) : (
+              <div className="active-controls">
+                <div className="conversation-status">
+                  {isSpeaking && (
+                    <div className="speaking-animation">
+                      <div className="wave"></div>
+                      <div className="wave"></div>
+                      <div className="wave"></div>
+                    </div>
+                  )}
+                  <p className="hint">
+                    {status === 'listening' ? '🎤 Speak now...' : 
+                     status === 'speaking' ? '🔊 Agent is speaking...' :
+                     status === 'thinking' ? '🤔 Processing your message...' :
+                     '💬 Ready for conversation'}
+                  </p>
+                </div>
+                <button 
+                  onClick={endConversation}
+                  className="main-button end"
+                >
+                  🔴 End Conversation
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="status-bar">
-          {isListening && <span className="status listening">🎤 Listening...</span>}
-          {isProcessing && <span className="status processing">🤔 Processing...</span>}
-          {isSpeaking && <span className="status speaking">🔊 Speaking...</span>}
-          {!isListening && !isProcessing && !isSpeaking && (
-            <span className="status ready">✅ Ready</span>
-          )}
+        <div className="footer">
+          <p className="info-text">
+            💡 Tip: Speak naturally. The agent will respond in real-time with voice.
+          </p>
         </div>
-
-        <audio 
-          ref={audioRef} 
-          onEnded={handleAudioEnded}
-          style={{ display: 'none' }}
-        />
       </div>
     </div>
   )
