@@ -75,6 +75,7 @@ function App() {
       'boos', 'kwaad', 'gefrustreerd', 'slecht', 'vreselijk', 'verschrikkelijk', 
       'ongelukkig', 'rot', 'ellendig', 'naar', 'nee', 'niet', 'sorry',
       'niet lekker', 'lekker in vel', 'lekker voelen', 'ongemakkelijk', 'onprettig',
+      'niet lekker in mijn vel', 'niet zo lekker in mijn vel', 'zit niet lekker in mijn vel',
       '😢', '😞', '😔', '😠'
     ]
     if (sadWords.some(word => textLower.includes(word))) {
