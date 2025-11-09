@@ -48,29 +48,66 @@ function App() {
     const textLower = text.toLowerCase()
     console.log('🔍 Detecting emotion for text:', textLower)
     
-    // Happy emotions - check first for priority
-    const happyWords = ['happy', 'great', 'awesome', 'excellent', 'wonderful', 'fantastic', 'love', 'excited', 'perfect', 'amazing', 'glad', 'pleasure', 'help', 'sure', 'absolutely', 'yes', 'definitely', '😊', '😄', '🎉', '👍']
+    // Happy emotions - English + Dutch
+    const happyWords = [
+      // English
+      'happy', 'great', 'awesome', 'excellent', 'wonderful', 'fantastic', 'love', 'excited', 
+      'perfect', 'amazing', 'glad', 'pleasure', 'help', 'sure', 'absolutely', 'yes', 'definitely',
+      'good', 'nice', 'cool', 'yay', 'thank', 'thanks',
+      // Dutch
+      'blij', 'gelukkig', 'geweldig', 'fantastisch', 'mooi', 'prachtig', 'super', 'top', 
+      'gewoon', 'leuk', 'fijn', 'lekker', 'ja', 'zeker', 'graag', 'dankjewel', 'bedankt',
+      'goed', 'prima', 'uitstekend', 'perfect', 'heerlijk', 'zalig', 'tof', 'gaaf',
+      '😊', '😄', '🎉', '👍'
+    ]
     if (happyWords.some(word => textLower.includes(word))) {
       console.log('✅ Detected HAPPY emotion')
       return 'happy'
     }
     
-    // Sad emotions
-    const sadWords = ['sad', 'sorry', 'unfortunately', 'disappointed', 'bad', 'terrible', 'awful', 'unhappy', 'upset', 'apologize', 'regret', '😢', '😞', '😔']
+    // Sad emotions - English + Dutch
+    const sadWords = [
+      // English
+      'sad', 'sorry', 'unfortunately', 'disappointed', 'bad', 'terrible', 'awful', 'unhappy', 
+      'upset', 'apologize', 'regret', 'frustrated', 'angry', 'mad', 'hate', 'no',
+      // Dutch
+      'verdrietig', 'triest', 'droevig', 'spijt', 'helaas', 'jammer', 'teleurgesteld', 
+      'boos', 'kwaad', 'gefrustreerd', 'slecht', 'vreselijk', 'verschrikkelijk', 
+      'ongelukkig', 'rot', 'ellendig', 'naar', 'nee', 'niet', 'sorry',
+      'niet lekker', 'lekker in vel', 'lekker voelen', 'ongemakkelijk', 'onprettig',
+      '😢', '😞', '😔', '😠'
+    ]
     if (sadWords.some(word => textLower.includes(word))) {
       console.log('😢 Detected SAD emotion')
       return 'sad'
     }
     
-    // Surprised emotions
-    const surprisedWords = ['wow', 'really', 'surprise', 'incredible', 'unbelievable', 'oh my', 'amazing', 'no way', '😮', '😲', '!']
+    // Surprised emotions - English + Dutch
+    const surprisedWords = [
+      // English
+      'wow', 'really', 'surprise', 'incredible', 'unbelievable', 'oh my', 'amazing', 
+      'no way', 'omg', 'seriously', 'what',
+      // Dutch
+      'wauw', 'wow', 'echt', 'serieus', 'echt waar', 'ongelofelijk', 'verbazingwekkend',
+      'niet te geloven', 'oh', 'wat', 'hoe kan dat', 'onmogelijk', 'jeetje', 'gossie',
+      '😮', '😲', '!'
+    ]
     if (surprisedWords.some(word => textLower.includes(word))) {
       console.log('😮 Detected SURPRISED emotion')
       return 'surprised'
     }
     
-    // Thinking/confused emotions
-    const thinkingWords = ['hmm', 'let me', 'think', 'consider', 'understand', 'wondering', 'moment', 'see', 'well', '🤔']
+    // Thinking/confused emotions - English + Dutch
+    const thinkingWords = [
+      // English
+      'hmm', 'let me', 'think', 'consider', 'understand', 'wondering', 'moment', 
+      'see', 'well', 'maybe', 'perhaps', 'how', 'why', 'what', 'where', 'when',
+      // Dutch
+      'hmm', 'even', 'denken', 'nadenken', 'laat me', 'laat mij', 'begrijpen', 
+      'snappen', 'vraag', 'vraagje', 'hoe', 'waarom', 'wat', 'waar', 'wanneer',
+      'misschien', 'wellicht', 'kijken', 'eens', 'eventjes', 'moment', 'momentje',
+      '🤔', '?'
+    ]
     if (thinkingWords.some(word => textLower.includes(word))) {
       console.log('🤔 Detected THINKING emotion')
       return 'thinking'
@@ -84,27 +121,27 @@ function App() {
     console.log('📝 Adding message:', role, content)
     setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
     
-    // Detect emotion from agent responses
-    if (role === 'assistant') {
+    // ONLY detect emotion from USER messages (what the user says)
+    if (role === 'user') {
       const detectedEmotion = detectEmotion(content)
-      console.log('🎭 Setting emotion to:', detectedEmotion)
+      console.log('🎭 USER said something - Setting avatar emotion to:', detectedEmotion, 'for text:', content)
+      console.log('🔄 Previous emotion was:', emotion)
+      
+      // FORCE update the emotion state
       setEmotion(detectedEmotion)
+      
+      // Verify the update happened
+      setTimeout(() => {
+        console.log('✅ Emotion should now be:', detectedEmotion)
+      }, 100)
       
       // Clear any existing timeout
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
+        emotionTimeoutRef.current = null
       }
       
-      // Keep emotion visible longer, then return to talking if still speaking
-      emotionTimeoutRef.current = setTimeout(() => {
-        console.log('⏰ Emotion timeout - isSpeaking:', isSpeaking)
-        setEmotion(prev => {
-          if (isSpeaking) {
-            return 'talking'
-          }
-          return 'neutral'
-        })
-      }, 5000) // Increased to 5 seconds
+      console.log('✨ Emotion locked at:', detectedEmotion, '- will persist until next user message')
     }
   }
 
@@ -119,7 +156,7 @@ function App() {
       }
 
       setStatus('connecting')
-      addMessage('system', '🔄 Connecting to AI agent...')
+      addMessage('system', '🔄 Connecting to AI agent Alfred...')
 
       // Initialize audio context for volume monitoring
       if (!audioContextRef.current) {
@@ -147,7 +184,7 @@ function App() {
           setIsConnected(true)
           setStatus('connected')
           setEmotion('happy')
-          addMessage('system', '✅ Connected! Start speaking to the AI agent...')
+          addMessage('system', '✅ Connected! Start speaking to the AI agent Alfred...')
           
           // Return to neutral after connection
           setTimeout(() => {
@@ -165,19 +202,66 @@ function App() {
         },
         
         onMessage: (message) => {
-          console.log('📨 Message received:', message)
+          console.log('📨 RAW Message received:', JSON.stringify(message, null, 2))
           
-          // Handle different message types
-          if (message.type === 'user_transcript' || message.message?.role === 'user') {
-            const text = message.text || message.message?.text || message.message?.content
-            if (text) {
-              addMessage('user', text)
+          let userText = null
+          let agentText = null
+          
+          // PRIMARY METHOD: Check source field (this is what ElevenLabs is using!)
+          if (message.source === 'user' && message.message) {
+            userText = message.message
+            console.log('✅ USER MESSAGE FOUND via source field')
+          } else if (message.source === 'ai' && message.message) {
+            agentText = message.message
+            console.log('✅ AI MESSAGE FOUND via source field')
+          }
+          
+          // Fallback Method 1: Direct type check
+          if (!userText && message.type === 'user_transcript') {
+            userText = message.text || message.transcript
+          }
+          
+          // Fallback Method 2: Check message.message object
+          if (!userText && !agentText && message.message) {
+            if (message.message.role === 'user') {
+              userText = message.message.text || message.message.content || message.message.transcript
+            } else if (message.message.role === 'assistant' || message.message.role === 'agent') {
+              agentText = message.message.text || message.message.content
             }
-          } else if (message.type === 'agent_response' || message.message?.role === 'assistant') {
-            const text = message.text || message.message?.text || message.message?.content
-            if (text) {
-              addMessage('assistant', text)
+          }
+          
+          // Fallback Method 3: Check for transcript field directly
+          if (!userText && message.transcript && message.source === 'user') {
+            userText = message.transcript
+          }
+          
+          // Fallback Method 4: Audio transcript
+          if (!userText && message.type === 'audio' && message.source === 'user') {
+            userText = message.transcript || message.text
+          }
+          
+          // Fallback Method 5: Conversation message type
+          if (!userText && !agentText && message.type === 'message') {
+            if (message.source === 'user' || message.role === 'user') {
+              userText = message.text || message.content || message.transcript
             }
+          }
+          
+          // Process user text
+          if (userText) {
+            console.log('👤 USER TRANSCRIPT DETECTED:', userText)
+            addMessage('user', userText)
+          }
+          
+          // Process agent text
+          if (agentText) {
+            console.log('🤖 AGENT RESPONSE:', agentText)
+            addMessage('assistant', agentText)
+          }
+          
+          // If nothing was captured, log it
+          if (!userText && !agentText) {
+            console.log('⚠️ Message not captured - source:', message.source, '| type:', message.type)
           }
         },
         
@@ -189,31 +273,17 @@ function App() {
         },
         
         onModeChange: (mode) => {
-          console.log('🔄 Mode changed:', mode)
+          console.log('🔄 Mode changed:', JSON.stringify(mode, null, 2))
           const newMode = mode.mode || mode
           setStatus(newMode)
           const wasSpeaking = isSpeaking
           setIsSpeaking(newMode === 'speaking')
           
-          console.log('🎤 Speaking state:', newMode === 'speaking')
+          console.log('🎤 Mode:', newMode, '| isSpeaking:', newMode === 'speaking', '| Current emotion:', emotion)
           
-          // Update emotion based on mode - but don't override expressive emotions
-          if (newMode === 'speaking') {
-            // Only change to talking if we're in a neutral/non-expressive state
-            setEmotion(prev => {
-              console.log('🎭 Current emotion during speaking:', prev)
-              if (prev === 'neutral' || prev === 'listening') {
-                return 'talking'
-              }
-              return prev // Keep the current expressive emotion
-            })
-          } else if (newMode === 'listening') {
-            setEmotion('listening')
-          } else if (newMode === 'thinking') {
-            setEmotion('thinking')
-          } else if (newMode === 'idle' && wasSpeaking) {
-            // Don't immediately reset after speaking, let the timeout handle it
-          }
+          // NEVER override user emotions from mode changes
+          // Log but don't change emotion
+          console.log('✨ Emotion locked at:', emotion, '- waiting for next user message')
         }
       })
 
@@ -265,30 +335,18 @@ function App() {
       setIsConnected(false)
       setStatus('disconnected')
       setVolume(0)
-      setEmotion('neutral')
+      setEmotion('neutral') // Reset to neutral when conversation ends
       addMessage('system', '👋 Conversation ended')
     }
     
     if (volumeAnimationRef.current) {
       cancelAnimationFrame(volumeAnimationRef.current)
     }
-  }
-
-  // Add test function for debugging
-  const testEmotions = () => {
-    const testMessages = [
-      'I am so happy to help you!',
-      'Unfortunately, I cannot do that.',
-      'Wow! That is amazing!',
-      'Let me think about that for a moment.',
-      'Hello, how can I assist you today?'
-    ]
     
-    testMessages.forEach((msg, index) => {
-      setTimeout(() => {
-        addMessage('assistant', msg)
-      }, index * 6000)
-    })
+    if (emotionTimeoutRef.current) {
+      clearTimeout(emotionTimeoutRef.current)
+      emotionTimeoutRef.current = null
+    }
   }
 
   const getStatusDisplay = () => {
@@ -316,8 +374,8 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>🤖 AI Voice Agent</h1>
-          <p>Real-time Conversational AI • Powered by ElevenLabs</p>
+          <h1>🤖 Alfred</h1>
+          <p>Real-time AI Agent • Powered by ElevenLabs</p>
         </header>
 
         <div className="avatar-section">
@@ -333,24 +391,6 @@ function App() {
           <div className={`status-badge ${statusInfo.class}`}>
             {statusInfo.text}
           </div>
-          {/* Temporary test button */}
-          {!isConnected && (
-            <button 
-              onClick={testEmotions}
-              style={{
-                marginLeft: '10px',
-                padding: '8px 16px',
-                background: '#ffa500',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontSize: '0.9rem'
-              }}
-            >
-              🧪 Test Emotions
-            </button>
-          )}
           {isConnected && (
             <div className="volume-indicator">
               <div 
@@ -365,13 +405,8 @@ function App() {
           <div className="messages">
             {messages.length === 0 && (
               <div className="welcome-message">
-                <h2>👋 Welcome to AI Voice Agent!</h2>
-                <p>Click "Start Conversation" to begin talking with your support agent in real-time.</p>
-                <div className="features">
-                  <div className="feature">🎤 Voice Input</div>
-                  <div className="feature">🔊 Voice Output</div>
-                  <div className="feature">⚡ Real-time Response</div>
-                </div>
+                <h2>👋 Welcome bij Alfred the AI assistent!</h2>
+                <p>Klik "Start Conversation" om het gesprek in real-time te beginnen.</p>
               </div>
             )}
             {messages.map((msg, index) => (
@@ -430,7 +465,7 @@ function App() {
 
         <div className="footer">
           <p className="info-text">
-            💡 Tip: Speak naturally. The agent will respond in real-time with voice.
+            Tip: Spreek natuurlijk. De agent zal in realtime met stem reageren.
           </p>
         </div>
       </div>

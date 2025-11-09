@@ -29,7 +29,7 @@
 }
 
 .avatar-head {
-  transition: all 0.5s ease;
+  transition: fill 0.5s ease !important;
 }
 
 .avatar.happy .avatar-head {

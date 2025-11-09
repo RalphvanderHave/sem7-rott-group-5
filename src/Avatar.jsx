@@ -4,7 +4,11 @@ import './Avatar.css'
 const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
   const [mouthOpen, setMouthOpen] = useState(false)
 
-  console.log('🎨 Avatar rendering with emotion:', emotion, 'isSpeaking:', isSpeaking)
+  console.log('🎨 Avatar RE-RENDERING with emotion:', emotion, 'isSpeaking:', isSpeaking)
+
+  useEffect(() => {
+    console.log('🔔 Avatar emotion changed to:', emotion)
+  }, [emotion])
 
   useEffect(() => {
     if (isSpeaking) {
@@ -72,7 +76,6 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
             cx="50" 
             cy="50" 
             r="45" 
-            fill="#667eea"
             className="avatar-head"
           />
           
