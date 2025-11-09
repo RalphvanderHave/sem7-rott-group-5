@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Conversation } from '@11labs/client'
+import Avatar from './Avatar'
 import './App.css'
 
 function App() {
@@ -8,12 +9,14 @@ function App() {
   const [status, setStatus] = useState('disconnected')
   const [messages, setMessages] = useState([])
   const [volume, setVolume] = useState(0)
+  const [emotion, setEmotion] = useState('neutral')
   
   const conversationRef = useRef(null)
   const audioContextRef = useRef(null)
   const analyserRef = useRef(null)
   const messagesEndRef = useRef(null)
   const volumeAnimationRef = useRef(null)
+  const emotionTimeoutRef = useRef(null)
 
   const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
   const AGENT_ID = import.meta.env.VITE_AGENT_ID
@@ -29,6 +32,9 @@ function App() {
       if (volumeAnimationRef.current) {
         cancelAnimationFrame(volumeAnimationRef.current)
       }
+      if (emotionTimeoutRef.current) {
+        clearTimeout(emotionTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -36,8 +42,70 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const detectEmotion = (text) => {
+    if (!text) return 'talking'
+    
+    const textLower = text.toLowerCase()
+    console.log('🔍 Detecting emotion for text:', textLower)
+    
+    // Happy emotions - check first for priority
+    const happyWords = ['happy', 'great', 'awesome', 'excellent', 'wonderful', 'fantastic', 'love', 'excited', 'perfect', 'amazing', 'glad', 'pleasure', 'help', 'sure', 'absolutely', 'yes', 'definitely', '😊', '😄', '🎉', '👍']
+    if (happyWords.some(word => textLower.includes(word))) {
+      console.log('✅ Detected HAPPY emotion')
+      return 'happy'
+    }
+    
+    // Sad emotions
+    const sadWords = ['sad', 'sorry', 'unfortunately', 'disappointed', 'bad', 'terrible', 'awful', 'unhappy', 'upset', 'apologize', 'regret', '😢', '😞', '😔']
+    if (sadWords.some(word => textLower.includes(word))) {
+      console.log('😢 Detected SAD emotion')
+      return 'sad'
+    }
+    
+    // Surprised emotions
+    const surprisedWords = ['wow', 'really', 'surprise', 'incredible', 'unbelievable', 'oh my', 'amazing', 'no way', '😮', '😲', '!']
+    if (surprisedWords.some(word => textLower.includes(word))) {
+      console.log('😮 Detected SURPRISED emotion')
+      return 'surprised'
+    }
+    
+    // Thinking/confused emotions
+    const thinkingWords = ['hmm', 'let me', 'think', 'consider', 'understand', 'wondering', 'moment', 'see', 'well', '🤔']
+    if (thinkingWords.some(word => textLower.includes(word))) {
+      console.log('🤔 Detected THINKING emotion')
+      return 'thinking'
+    }
+    
+    console.log('💬 Default TALKING emotion')
+    return 'talking'
+  }
+
   const addMessage = (role, content) => {
+    console.log('📝 Adding message:', role, content)
     setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
+    
+    // Detect emotion from agent responses
+    if (role === 'assistant') {
+      const detectedEmotion = detectEmotion(content)
+      console.log('🎭 Setting emotion to:', detectedEmotion)
+      setEmotion(detectedEmotion)
+      
+      // Clear any existing timeout
+      if (emotionTimeoutRef.current) {
+        clearTimeout(emotionTimeoutRef.current)
+      }
+      
+      // Keep emotion visible longer, then return to talking if still speaking
+      emotionTimeoutRef.current = setTimeout(() => {
+        console.log('⏰ Emotion timeout - isSpeaking:', isSpeaking)
+        setEmotion(prev => {
+          if (isSpeaking) {
+            return 'talking'
+          }
+          return 'neutral'
+        })
+      }, 5000) // Increased to 5 seconds
+    }
   }
 
   const startConversation = async () => {
@@ -78,7 +146,13 @@ function App() {
           console.log('✅ Connected to agent')
           setIsConnected(true)
           setStatus('connected')
+          setEmotion('happy')
           addMessage('system', '✅ Connected! Start speaking to the AI agent...')
+          
+          // Return to neutral after connection
+          setTimeout(() => {
+            setEmotion('neutral')
+          }, 2000)
         },
         
         onDisconnect: () => {
@@ -86,6 +160,7 @@ function App() {
           setIsConnected(false)
           setStatus('disconnected')
           setVolume(0)
+          setEmotion('neutral')
           addMessage('system', '🔌 Disconnected from agent')
         },
         
@@ -109,6 +184,7 @@ function App() {
         onError: (error) => {
           console.error('❌ Conversation error:', error)
           setStatus('error')
+          setEmotion('sad')
           addMessage('system', `⚠️ Error: ${error.message || 'Unknown error occurred'}`)
         },
         
@@ -116,7 +192,28 @@ function App() {
           console.log('🔄 Mode changed:', mode)
           const newMode = mode.mode || mode
           setStatus(newMode)
+          const wasSpeaking = isSpeaking
           setIsSpeaking(newMode === 'speaking')
+          
+          console.log('🎤 Speaking state:', newMode === 'speaking')
+          
+          // Update emotion based on mode - but don't override expressive emotions
+          if (newMode === 'speaking') {
+            // Only change to talking if we're in a neutral/non-expressive state
+            setEmotion(prev => {
+              console.log('🎭 Current emotion during speaking:', prev)
+              if (prev === 'neutral' || prev === 'listening') {
+                return 'talking'
+              }
+              return prev // Keep the current expressive emotion
+            })
+          } else if (newMode === 'listening') {
+            setEmotion('listening')
+          } else if (newMode === 'thinking') {
+            setEmotion('thinking')
+          } else if (newMode === 'idle' && wasSpeaking) {
+            // Don't immediately reset after speaking, let the timeout handle it
+          }
         }
       })
 
@@ -141,6 +238,7 @@ function App() {
       console.error('❌ Failed to start conversation:', error)
       setStatus('error')
       setIsConnected(false)
+      setEmotion('sad')
       
       let errorMessage = error.message
       if (error.message.includes('API key')) {
@@ -167,12 +265,30 @@ function App() {
       setIsConnected(false)
       setStatus('disconnected')
       setVolume(0)
+      setEmotion('neutral')
       addMessage('system', '👋 Conversation ended')
     }
     
     if (volumeAnimationRef.current) {
       cancelAnimationFrame(volumeAnimationRef.current)
     }
+  }
+
+  // Add test function for debugging
+  const testEmotions = () => {
+    const testMessages = [
+      'I am so happy to help you!',
+      'Unfortunately, I cannot do that.',
+      'Wow! That is amazing!',
+      'Let me think about that for a moment.',
+      'Hello, how can I assist you today?'
+    ]
+    
+    testMessages.forEach((msg, index) => {
+      setTimeout(() => {
+        addMessage('assistant', msg)
+      }, index * 6000)
+    })
   }
 
   const getStatusDisplay = () => {
@@ -204,10 +320,37 @@ function App() {
           <p>Real-time Conversational AI • Powered by ElevenLabs</p>
         </header>
 
+        <div className="avatar-section">
+          <Avatar 
+            emotion={emotion} 
+            isSpeaking={isSpeaking}
+            volume={volume}
+            isConnected={isConnected}
+          />
+        </div>
+
         <div className="status-indicator">
           <div className={`status-badge ${statusInfo.class}`}>
             {statusInfo.text}
           </div>
+          {/* Temporary test button */}
+          {!isConnected && (
+            <button 
+              onClick={testEmotions}
+              style={{
+                marginLeft: '10px',
+                padding: '8px 16px',
+                background: '#ffa500',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              🧪 Test Emotions
+            </button>
+          )}
           {isConnected && (
             <div className="volume-indicator">
               <div 
