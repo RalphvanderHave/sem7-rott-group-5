@@ -1,0 +1,64 @@
+{
+  "type": "webhook",
+  "name": "search_mem0",
+  "description": "Search long-term memory for contextual information about the user.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/search",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "search_mem0_body",
+      "type": "object",
+      "description": "Request body used to search user memories stored in the backend.",
+      "required": true,
+      "properties": [
+        {
+          "id": "userId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Unique user identifier whose memories should be searched.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "query",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional query text to filter relevant memories.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        }
+      ]
+    },
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "1dWlxsjfInYkqJLi5Y3P"
+      },
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}
