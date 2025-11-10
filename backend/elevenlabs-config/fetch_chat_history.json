@@ -1,0 +1,53 @@
+{
+  "type": "webhook",
+  "name": "fetch_chat_history",
+  "description": "Retrieve previous chat messages before replying.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/history",
+    "method": "GET",
+    "path_params_schema": [],
+    "query_params_schema": [
+      {
+        "id": "limit",
+        "type": "integer",
+        "value_type": "llm_prompt",
+        "description": "The number of recent chat messages to retrieve (default 20).",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": false
+      },
+      {
+        "id": "userId",
+        "type": "string",
+        "value_type": "llm_prompt",
+        "description": "The unique user identifier to retrieve chat history for.",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": true
+      }
+    ],
+    "request_body_schema": null,
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "1dWlxsjfInYkqJLi5Y3P"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

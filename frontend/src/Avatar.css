@@ -1,0 +1,194 @@
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-bottom: 2px solid #e9ecef;
+}
+
+.avatar-container.connected {
+  background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+}
+
+.avatar {
+  width: 200px;
+  height: 200px;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+}
+
+.avatar.speaking {
+  animation: bounce 0.5s ease-in-out infinite;
+}
+
+.avatar-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-head {
+  transition: fill 0.5s ease !important;
+}
+
+.avatar.happy .avatar-head {
+  fill: #51cf66 !important;
+}
+
+.avatar.sad .avatar-head {
+  fill: #748ffc !important;
+}
+
+.avatar.thinking .avatar-head {
+  fill: #ffa500 !important;
+}
+
+.avatar.surprised .avatar-head {
+  fill: #ff6b6b !important;
+}
+
+.avatar.listening .avatar-head {
+  fill: #7950f2 !important;
+}
+
+.avatar.talking .avatar-head {
+  fill: #667eea !important;
+  animation: glow 1s ease-in-out infinite;
+}
+
+.avatar.neutral .avatar-head {
+  fill: #667eea !important;
+}
+
+.eyes {
+  transition: all 0.3s ease;
+}
+
+.pupil {
+  transition: all 0.2s ease;
+}
+
+.avatar.listening .left-pupil {
+  animation: lookLeft 2s ease-in-out infinite;
+}
+
+.avatar.listening .right-pupil {
+  animation: lookRight 2s ease-in-out infinite;
+}
+
+.avatar.thinking .left-pupil,
+.avatar.thinking .right-pupil {
+  animation: lookUp 1.5s ease-in-out infinite;
+}
+
+.eyes-happy {
+  animation: blink 3s ease-in-out infinite;
+}
+
+.eyes-surprised .eye-white {
+  r: 7;
+}
+
+.mouth {
+  transition: all 0.2s ease;
+}
+
+.eyebrow {
+  animation: eyebrowMove 2s ease-in-out infinite;
+}
+
+.sound-wave {
+  animation: soundWave 0.8s ease-in-out infinite;
+}
+
+.wave-2 {
+  animation-delay: 0.2s;
+  opacity: 0.7;
+}
+
+.emotion-label {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #495057;
+  padding: 8px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.8));
+  }
+}
+
+@keyframes blink {
+  0%, 90%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes lookLeft {
+  0%, 100% {
+    cx: 35;
+  }
+  50% {
+    cx: 32;
+  }
+}
+
+@keyframes lookRight {
+  0%, 100% {
+    cx: 65;
+  }
+  50% {
+    cx: 68;
+  }
+}
+
+@keyframes lookUp {
+  0%, 100% {
+    cy: 40;
+  }
+  50% {
+    cy: 38;
+  }
+}
+
+@keyframes eyebrowMove {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes soundWave {
+  0%, 100% {
+    opacity: 0;
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(5px) scale(1.2);
+  }
+}
