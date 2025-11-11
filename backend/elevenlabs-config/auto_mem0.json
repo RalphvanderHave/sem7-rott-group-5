@@ -1,7 +1,7 @@
 {
   "type": "webhook",
-  "name": "add_mem0",
-  "description": "Save a concise long-term memory (<=120 chars) with optional tags for a user.",
+  "name": "auto_mem0",
+  "description": "Decide whether the latest user utterance is memory-worthy and save it automatically (with de-dup). Called after every user utterance.",
   "disable_interruptions": false,
   "force_pre_tool_speech": "auto",
   "assignments": [],
@@ -9,31 +9,20 @@
   "tool_call_sound_behavior": "auto",
   "execution_mode": "immediate",
   "api_schema": {
-    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/add",
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/auto",
     "method": "POST",
     "path_params_schema": [],
     "query_params_schema": [],
     "request_body_schema": {
       "id": "body",
       "type": "object",
-      "description": "Payload for adding a new memory.",
+      "description": "Body for automatic memory saving.",
       "properties": [
         {
-          "id": "text",
-          "type": "string",
+          "id": "dedupe_threshold",
+          "type": "number",
           "value_type": "llm_prompt",
-          "description": "Short memory text (<120 chars).",
-          "dynamic_variable": "",
-          "constant_value": "",
-          "enum": null,
-          "is_system_provided": false,
-          "required": true
-        },
-        {
-          "id": "ts",
-          "type": "string",
-          "value_type": "llm_prompt",
-          "description": "Optional ISO-8601 timestamp of this memory.",
+          "description": "Duplicate similarity threshold (0.5–0.99). Default 0.9.",
           "dynamic_variable": "",
           "constant_value": "",
           "enum": null,
@@ -41,44 +30,26 @@
           "required": false
         },
         {
-          "id": "tags",
-          "type": "array",
-          "description": "Optional tags (1–4).",
-          "items": {
-            "id": "",
-            "type": "string",
-            "value_type": "llm_prompt",
-            "description": "One tag label.",
-            "dynamic_variable": "",
-            "constant_value": "",
-            "enum": [
-              "preference",
-              "habit",
-              "event",
-              "schedule",
-              "family",
-              "health",
-              "music",
-              "food",
-              "sleep",
-              "privacy"
-            ],
-            "is_system_provided": false,
-            "required": false
-          },
-          "required": false,
-          "value_type": "llm_prompt"
-        },
-        {
-          "id": "userId",
+          "id": "utterance",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "User identifier to save memory for (AI may define/recall it each session).",
+          "description": "Latest user message text.",
           "dynamic_variable": "",
           "constant_value": "",
           "enum": null,
           "is_system_provided": false,
           "required": true
+        },
+        {
+          "id": "userId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "User identifier; the AI may provide it or omit it (backend can infer).",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
         }
       ],
       "required": false,

@@ -1,7 +1,7 @@
 {
   "type": "webhook",
-  "name": "add_mem0",
-  "description": "Save a concise long-term memory (<=120 chars) with optional tags for a user.",
+  "name": "mem0_clear",
+  "description": "Clear all memories for a user. (Note: backend requires only userId; other fields are optional and may be ignored.)",
   "disable_interruptions": false,
   "force_pre_tool_speech": "auto",
   "assignments": [],
@@ -9,41 +9,19 @@
   "tool_call_sound_behavior": "auto",
   "execution_mode": "immediate",
   "api_schema": {
-    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/add",
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/clear",
     "method": "POST",
     "path_params_schema": [],
     "query_params_schema": [],
     "request_body_schema": {
       "id": "body",
       "type": "object",
-      "description": "Payload for adding a new memory.",
+      "description": "Payload to clear memories for a user.",
       "properties": [
-        {
-          "id": "text",
-          "type": "string",
-          "value_type": "llm_prompt",
-          "description": "Short memory text (<120 chars).",
-          "dynamic_variable": "",
-          "constant_value": "",
-          "enum": null,
-          "is_system_provided": false,
-          "required": true
-        },
-        {
-          "id": "ts",
-          "type": "string",
-          "value_type": "llm_prompt",
-          "description": "Optional ISO-8601 timestamp of this memory.",
-          "dynamic_variable": "",
-          "constant_value": "",
-          "enum": null,
-          "is_system_provided": false,
-          "required": false
-        },
         {
           "id": "tags",
           "type": "array",
-          "description": "Optional tags (1–4).",
+          "description": "Optional tags to limit which memories are cleared (backend may ignore).",
           "items": {
             "id": "",
             "type": "string",
@@ -73,12 +51,23 @@
           "id": "userId",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "User identifier to save memory for (AI may define/recall it each session).",
+          "description": "User identifier whose memories will be cleared (AI may define/recall it each session).",
           "dynamic_variable": "",
           "constant_value": "",
           "enum": null,
           "is_system_provided": false,
           "required": true
+        },
+        {
+          "id": "confirm",
+          "type": "boolean",
+          "value_type": "llm_prompt",
+          "description": "Must be true to proceed (enforced by the agent; backend may ignore).",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
         }
       ],
       "required": false,
