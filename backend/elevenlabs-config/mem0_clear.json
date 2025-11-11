@@ -1,0 +1,94 @@
+{
+  "type": "webhook",
+  "name": "mem0_clear",
+  "description": "Clear all memories for a user, optionally filtered by tags. Requires explicit confirm=true.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/clear",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Payload to clear memories for a user.",
+      "properties": [
+        {
+          "id": "tags",
+          "type": "array",
+          "description": "Optional tags to limit which memories are cleared.",
+          "items": {
+            "id": "",
+            "type": "string",
+            "value_type": "llm_prompt",
+            "description": "One tag label.",
+            "dynamic_variable": "",
+            "constant_value": "",
+            "enum": [
+              "preference",
+              "habit",
+              "event",
+              "schedule",
+              "family",
+              "health",
+              "music",
+              "food",
+              "sleep",
+              "privacy"
+            ],
+            "is_system_provided": false,
+            "required": false
+          },
+          "required": false,
+          "value_type": "llm_prompt"
+        },
+        {
+          "id": "userId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "User identifier whose memories will be cleared.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "confirm",
+          "type": "boolean",
+          "value_type": "llm_prompt",
+          "description": "Must be true to proceed.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "lUBjq5iUpRNLWnrbgQNH"
+      },
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

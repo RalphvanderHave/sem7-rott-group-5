@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess  # <-- added: for calling tailscale CLI
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 
@@ -27,6 +28,10 @@ DEBUG_LOG = os.getenv("DEBUG_LOG", "0") == "1"
 MEM_MODEL_NAME = os.getenv("MEM_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 DISABLE_CHAT_SAVE = os.getenv("DISABLE_CHAT_SAVE", "1") == "1"
 
+# NEW: Tailscale Funnel switches
+ENABLE_TAILSCALE_FUNNEL = os.getenv("ENABLE_TAILSCALE_FUNNEL", "0") == "1"
+TAILSCALE_FUNNEL_PORT = int(os.getenv("TAILSCALE_FUNNEL_PORT", str(PORT)))
+
 # -------------------- FastAPI --------------------
 app = FastAPI(title="Alfred Backend (Mem0-local)")
 
@@ -37,7 +42,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -------------------- Authentication --------------------
 def auth(authorization: Optional[str] = Header(None)):
@@ -50,10 +54,8 @@ def auth(authorization: Optional[str] = Header(None)):
     if token != AUTH_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-
 # -------------------- Embedding utils --------------------
 _model: SentenceTransformer = None
-
 
 def _load_model() -> SentenceTransformer:
     global _model
@@ -63,16 +65,13 @@ def _load_model() -> SentenceTransformer:
         _model = SentenceTransformer(MEM_MODEL_NAME)
     return _model
 
-
 def _embed(texts: List[str]) -> np.ndarray:
     model = _load_model()
     vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
     return vecs.astype(np.float32, copy=False)
 
-
 def _from_bytes(b: bytes) -> np.ndarray:
     return np.frombuffer(b, dtype=np.float32)
-
 
 # -------------------- Time helpers --------------------
 def _parse_ts(s: Optional[str]) -> datetime:
@@ -84,17 +83,14 @@ def _parse_ts(s: Optional[str]) -> datetime:
     except Exception:
         return datetime.utcnow()
 
-
 def _iso(dt: datetime) -> str:
     try:
         return dt.isoformat()
     except Exception:
         return datetime.utcnow().isoformat()
 
-
 def _now_iso() -> str:
     return datetime.utcnow().isoformat()
-
 
 # -------------------- Request models --------------------
 class SaveReq(BaseModel):
@@ -105,12 +101,10 @@ class SaveReq(BaseModel):
     chatId: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
 
-
 class MemSearchReq(BaseModel):
     userId: str
     query: Optional[str] = None
     top_k: int = 5
-
 
 class MemAddReq(BaseModel):
     userId: str
@@ -118,15 +112,12 @@ class MemAddReq(BaseModel):
     tags: Optional[List[str]] = None
     ts: Optional[str] = None
 
-
 class MemDeleteReq(BaseModel):
     userId: str
     id: str
 
-
 class MemClearReq(BaseModel):
     userId: str
-
 
 class MemAutoReq(BaseModel):
     userId: str
@@ -135,6 +126,74 @@ class MemAutoReq(BaseModel):
     suggest_tags: Optional[List[str]] = None
     dedupe_threshold: float = 0.9
 
+# -------------------- Tailscale helpers (NEW) --------------------
+def _start_tailscale_service_windows() -> None:
+    """
+    Ensure Tailscale Windows service is running.
+    Safe to call multiple times; no exception if already running.
+    """
+    try:
+        # 'sc start Tailscale' won't fail the process if already running.
+        subprocess.run(["sc", "start", "Tailscale"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print(f"[WARN] Unable to start Tailscale service: {e}")
+
+def _enable_tailscale_funnel(port: int) -> None:
+    """
+    Enable Tailscale Funnel for the given port.
+    Prerequisites:
+      - You must have logged in at least once: `tailscale up --ssh` (or with your authkey).
+      - Funnel must be allowed on the machine (we try `tailscale funnel enable` if needed).
+    Behavior:
+      - If already on, it will no-op.
+      - If not enabled yet, it will attempt to enable and turn it on.
+    """
+    try:
+        # Check current funnel status
+        status = subprocess.run(
+            ["tailscale", "funnel", "status"],
+            capture_output=True, text=True
+        )
+        already_on = (status.returncode == 0 and f"{port}: funnel on" in (status.stdout or ""))
+
+        if already_on:
+            print(f"[INFO] Tailscale Funnel already active on port {port}.")
+            return
+
+        print(f"[INFO] Enabling Tailscale Funnel on port {port}...")
+        # Try to turn on funnel for the port
+        result = subprocess.run(["tailscale", "funnel", str(port), "on"], capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"[INFO] Funnel ON for port {port}.")
+            return
+
+        # If failed (likely funnel not enabled yet), try enabling funnel feature then retry.
+        print(f"[INFO] Funnel not enabled yet, trying `tailscale funnel enable`...")
+        en = subprocess.run(["tailscale", "funnel", "enable"], capture_output=True, text=True)
+        if en.returncode != 0:
+            print(f"[WARN] `tailscale funnel enable` failed: {en.stderr.strip()}")
+        # Retry turn on
+        result2 = subprocess.run(["tailscale", "funnel", str(port), "on"], capture_output=True, text=True)
+        if result2.returncode == 0:
+            print(f"[INFO] Funnel ON for port {port}.")
+        else:
+            print(f"[WARN] Failed to enable funnel on port {port}: {result2.stderr.strip()}")
+
+    except FileNotFoundError:
+        print("[WARN] `tailscale` CLI not found. Please ensure Tailscale is installed and in PATH.")
+    except Exception as e:
+        print(f"[WARN] Could not enable Tailscale funnel: {e}")
+
+def ensure_funnel_if_enabled():
+    """
+    Entry helper that respects ENV switches.
+    - Starts Tailscale service on Windows.
+    - Enables funnel on the configured port if ENABLE_TAILSCALE_FUNNEL=1.
+    """
+    if not ENABLE_TAILSCALE_FUNNEL:
+        return
+    _start_tailscale_service_windows()
+    _enable_tailscale_funnel(TAILSCALE_FUNNEL_PORT)
 
 # -------------------- Middleware (debug logging) --------------------
 @app.middleware("http")
@@ -144,7 +203,6 @@ async def debug_logger(request: Request, call_next):
     resp = await call_next(request)
     return resp
 
-
 # -------------------- Health --------------------
 @app.get("/health")
 def health():
@@ -153,9 +211,9 @@ def health():
         "time": _now_iso(),
         "db": DATABASE_URL,
         "chat_save": not DISABLE_CHAT_SAVE,
-        "model": MEM_MODEL_NAME
+        "model": MEM_MODEL_NAME,
+        "funnel": {"enabled": ENABLE_TAILSCALE_FUNNEL, "port": TAILSCALE_FUNNEL_PORT}
     }
-
 
 # -------------------- Chat history (optional, disabled by default) --------------------
 @app.get("/history")
@@ -174,7 +232,6 @@ def get_history(
     )
     rows = list(reversed(rows))
     return {"messages": [{"role": r.role, "text": r.text, "ts": _iso(r.ts)} for r in rows]}
-
 
 @app.post("/save")
 def save_message(req: SaveReq, db: Session = Depends(get_db), _=Depends(auth)):
@@ -198,7 +255,6 @@ def save_message(req: SaveReq, db: Session = Depends(get_db), _=Depends(auth)):
     db.add(msg)
     db.commit()
     return {"ok": True}
-
 
 # -------------------- Internal memory save helper --------------------
 def _save_memory(
@@ -240,7 +296,6 @@ def _save_memory(
     db.commit()
     return {"ok": True, "id": mem.id}
 
-
 # -------------------- /mem0/add --------------------
 @app.post("/mem0/add")
 def mem0_add(req: MemAddReq, db: Session = Depends(get_db), _=Depends(auth)):
@@ -253,7 +308,6 @@ def mem0_add(req: MemAddReq, db: Session = Depends(get_db), _=Depends(auth)):
         dedupe_threshold=0.9
     )
     return result
-
 
 # -------------------- /mem0/search --------------------
 @app.post("/mem0/search")
@@ -302,7 +356,6 @@ def mem0_search(req: MemSearchReq, db: Session = Depends(get_db), _=Depends(auth
         ]
     }
 
-
 # -------------------- /mem0/delete --------------------
 @app.post("/mem0/delete")
 def mem0_delete(req: MemDeleteReq, db: Session = Depends(get_db), _=Depends(auth)):
@@ -313,14 +366,12 @@ def mem0_delete(req: MemDeleteReq, db: Session = Depends(get_db), _=Depends(auth
     db.commit()
     return {"ok": True}
 
-
 # -------------------- /mem0/clear --------------------
 @app.post("/mem0/clear")
 def mem0_clear(req: MemClearReq, db: Session = Depends(get_db), _=Depends(auth)):
     db.query(Memory).filter(Memory.user_id == req.userId).delete()
     db.commit()
     return {"ok": True, "cleared": True}
-
 
 # -------------------- /mem0/auto --------------------
 _PREF_WORDS = ["like", "love", "prefer", "enjoy", "dislike", "hate"]
@@ -330,7 +381,6 @@ _RULE_WORDS = ["remember", "from now on", "always", "never", "please", "remind",
 
 DATE_RE = re.compile(r"(20\d{2}-\d{2}-\d{2})")
 TIME_RE = re.compile(r"\b([01]?\d|2[0-3]):([0-5]\d)\b")
-
 
 def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
     u = (utterance or "").strip()
@@ -381,7 +431,6 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
 
     return (should, summary, tags)
 
-
 @app.post("/mem0/auto")
 def mem0_auto(req: MemAutoReq, db: Session = Depends(get_db), _=Depends(auth)):
     utter = (req.utterance or "").strip()
@@ -413,7 +462,6 @@ def mem0_auto(req: MemAutoReq, db: Session = Depends(get_db), _=Depends(auth)):
     resp.update(result)
     return resp
 
-
 # -------------------- Startup --------------------
 @app.on_event("startup")
 def on_startup():
@@ -423,9 +471,11 @@ def on_startup():
     print(f"[INFO] Database: {DATABASE_URL}")
     print(f"[INFO] Auth: {'ON' if AUTH_TOKEN else 'OFF'}")
     print(f"[INFO] Chat saving: {'DISABLED' if DISABLE_CHAT_SAVE else 'ENABLED'}")
-
+    # Try to start Funnel when the app server starts (best-effort)
+    ensure_funnel_if_enabled()
 
 if __name__ == "__main__":
     import uvicorn
-
+    # Best-effort funnel enabling before binding the port when running directly.
+    ensure_funnel_if_enabled()
     uvicorn.run("app:app", host="0.0.0.0", port=PORT, reload=True)
