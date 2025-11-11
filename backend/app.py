@@ -58,7 +58,10 @@ app.add_middleware(
 
 # -------------------- Authentication --------------------
 def auth(authorization: Optional[str] = Header(None)):
-    """Simple bearer token auth."""
+    """
+    Simple bearer token auth.
+    If AUTH_TOKEN is not set, auth is disabled.
+    """
     if not AUTH_TOKEN:
         return
     if not authorization or not authorization.startswith("Bearer "):
@@ -73,7 +76,7 @@ _model: SentenceTransformer = None
 
 
 def _load_model() -> SentenceTransformer:
-    """Lazy-load the embedding model."""
+    """Lazy-load the embedding model (singleton)."""
     global _model
     if _model is None:
         if DEBUG_LOG:
@@ -83,7 +86,7 @@ def _load_model() -> SentenceTransformer:
 
 
 def _embed(texts: List[str]) -> np.ndarray:
-    """Encode text into normalized vectors (float32)."""
+    """Encode text into normalized float32 vectors."""
     model = _load_model()
     vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
     return vecs.astype(np.float32, copy=False)
@@ -96,6 +99,7 @@ def _from_bytes(b: bytes) -> np.ndarray:
 
 # -------------------- Time helpers --------------------
 def _parse_ts(s: Optional[str]) -> datetime:
+    """Parse ISO timestamp string into UTC datetime (fallback to now)."""
     if not s:
         return datetime.utcnow()
     try:
@@ -106,6 +110,7 @@ def _parse_ts(s: Optional[str]) -> datetime:
 
 
 def _iso(dt: datetime) -> str:
+    """ISO format with fallback."""
     try:
         return dt.isoformat()
     except Exception:
@@ -149,14 +154,14 @@ class MemClearReq(BaseModel):
 
 
 class MemAutoReq(BaseModel):
-    userId: str
+    userId: Optional[str] = None
     utterance: str
     suggest_text: Optional[str] = None
     suggest_tags: Optional[List[str]] = None
     dedupe_threshold: float = 0.9
 
 
-# -------------------- Tailscale helpers (NEW) --------------------
+# -------------------- Tailscale helpers --------------------
 def _start_tailscale_service_windows() -> None:
     """
     Ensure Tailscale Windows service is running and logged in.
@@ -164,8 +169,10 @@ def _start_tailscale_service_windows() -> None:
     """
     try:
         # Start the Windows service (no-op if already running)
-        subprocess.run(["sc", "start", "Tailscale"],
-                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            ["sc", "start", "Tailscale"],
+            check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
 
         # Check login state
         st = subprocess.run(["tailscale", "status"], capture_output=True, text=True)
@@ -184,35 +191,24 @@ def _start_tailscale_service_windows() -> None:
 
 def _parse_funnel_url_from_status_text(text: str) -> Optional[str]:
     """
-    Parse the public https URL from `tailscale funnel status` output (text mode).
-    Lines often look like:
-      Available on the internet:
-      https://<device>.ts.net
-    or mapping lines like:
-      https://<device>.ts.net -> http://127.0.0.1:3000 ...
+    Parse the public https URL from `tailscale funnel status` output.
     """
     if not text:
         return None
     for line in text.splitlines():
         s = line.strip()
         if s.startswith("https://") and ".ts.net" in s:
-            # keep only the URL token
             return s.split()[0]
     return None
 
 
 def _get_funnel_url() -> Optional[str]:
-    """
-    Return the current Funnel URL if Funnel is active on this node.
-    Prefer JSON; fall back to plain text parsing.
-    """
+    """Return the current Funnel URL if Funnel is active on this node."""
     try:
         j = subprocess.run(["tailscale", "funnel", "status", "--json"], capture_output=True, text=True)
         if j.returncode == 0 and j.stdout.strip():
             try:
                 data = json.loads(j.stdout)
-                # Newer clients expose a top-level or nested mapping of https sites.
-                # We search for any "https://" hostname present.
                 txt = json.dumps(data)
                 return _parse_funnel_url_from_status_text(txt.replace("\\n", "\n"))
             except Exception:
@@ -230,24 +226,14 @@ def _get_funnel_url() -> Optional[str]:
 def _enable_tailscale_funnel(port: int) -> None:
     """
     Enable Tailscale Funnel for a local HTTP server on 127.0.0.1:<port>.
-    New CLI (≥1.52):
-      - Public internet:   `tailscale funnel 3000`
-      - Limit to tailnet:  `tailscale serve --http=80 localhost:3000`
-    Notes:
-      * Only http://127.0.0.1 proxies are supported for reverse proxy.
-      * If you need a fixed HTTPS listener port, use: `tailscale funnel --https=443 localhost:3000`.
     """
     try:
-        # Reset old funnel config (optional but helps when migrating)
         subprocess.run(["tailscale", "funnel", "reset"], check=False,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        # Start Funnel in background for the local app on 127.0.0.1:<port>
-        # (default HTTPS listener is an allowed port; examples show plain `tailscale funnel 3000`)
         cmd = ["tailscale", "funnel", "--bg", f"{port}"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
-            # Try explicit mapping with allowed HTTPS port
             print(f"[WARN] `{' '.join(cmd)}` failed: {res.stderr.strip() or res.stdout.strip()}")
             res2 = subprocess.run(
                 ["tailscale", "funnel", "--bg", "--https=443", f"localhost:{port}"],
@@ -257,7 +243,6 @@ def _enable_tailscale_funnel(port: int) -> None:
                 print(f"[WARN] Fallback `tailscale funnel --https=443 localhost:{port}` failed: "
                       f"{res2.stderr.strip() or res2.stdout.strip()}")
 
-        # Print the URL (if we can detect it)
         url = _get_funnel_url()
         if url:
             print(f"[INFO] Funnel available: {url}")
@@ -272,7 +257,7 @@ def _enable_tailscale_funnel(port: int) -> None:
 
 def ensure_funnel_if_enabled():
     """
-    Entrypoint used by startup & __main__:
+    Called on startup and __main__:
       - Start Tailscale service on Windows; login via .tailscale auth key if needed.
       - If ENABLE_TAILSCALE_FUNNEL=1, enable Funnel for TAILSCALE_FUNNEL_PORT.
     """
@@ -285,16 +270,22 @@ def ensure_funnel_if_enabled():
 # -------------------- Middleware (debug logging) --------------------
 import time
 
+
 @app.middleware("http")
 async def debug_logger(request: Request, call_next):
+    """
+    Lightweight access log when DEBUG_LOG=1.
+    Example:
+      [DEBUG] 127.0.0.1 GET /health -> 200 (3.2 ms)
+    """
     start = time.perf_counter()
     try:
         response = await call_next(request)
         if DEBUG_LOG:
             dur_ms = (time.perf_counter() - start) * 1000
-            # 例如: [DEBUG] 127.0.0.1 GET /health -> 200 (3.2 ms)
             client = getattr(request.client, "host", "-")
-            print(f"[DEBUG] {client} {request.method} {request.url.path} -> {response.status_code} ({dur_ms:.1f} ms)", flush=True)
+            print(f"[DEBUG] {client} {request.method} {request.url.path} -> {response.status_code} ({dur_ms:.1f} ms)",
+                  flush=True)
         return response
     except Exception as e:
         if DEBUG_LOG:
@@ -337,7 +328,9 @@ def get_history(
 
 @app.post("/save")
 def save_message(req: SaveReq, db: Session = Depends(get_db), _=Depends(auth)):
-    """Disabled by default. Set DISABLE_CHAT_SAVE=0 to enable."""
+    """
+    Disabled by default unless DISABLE_CHAT_SAVE=0.
+    """
     if DISABLE_CHAT_SAVE:
         return {"ok": True, "skipped": "chat-saving disabled"}
 
@@ -368,6 +361,12 @@ def _save_memory(
         created_ts: Optional[str] = None,
         dedupe_threshold: float = 0.9
 ) -> Dict[str, Any]:
+    """
+    Save a memory vector with duplicate check using cosine similarity.
+    Returns:
+      - {"ok": True, "id": "..."} on insert
+      - {"ok": True, "skipped": "duplicate", "dup_id": "...", "score": <float>} on duplicate
+    """
     text = (text or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="text is required")
@@ -417,6 +416,10 @@ def mem0_add(req: MemAddReq, db: Session = Depends(get_db), _=Depends(auth)):
 # -------------------- /mem0/search --------------------
 @app.post("/mem0/search")
 def mem0_search(req: MemSearchReq, db: Session = Depends(get_db), _=Depends(auth)):
+    """
+    POST {userId, query?, top_k}
+    If query is empty, return the latest N memories (N=top_k).
+    """
     if not req.query or not req.query.strip():
         items = (
             db.query(Memory)
@@ -482,8 +485,9 @@ def mem0_clear(req: MemClearReq, db: Session = Depends(get_db), _=Depends(auth))
 
 
 # -------------------- /mem0/auto --------------------
+# Keywords for simple heuristic classification
 _PREF_WORDS = ["like", "love", "prefer", "enjoy", "dislike", "hate"]
-_HABIT_WORDS = ["every day", "each morning", "each night", "routine", "habit"]
+_HABIT_WORDS = ["every day", "each morning", "each night", "routine", "habit", "every week", "weekly"]
 _EVENT_WORDS = ["appointment", "meeting", "visit", "birthday", "doctor", "dentist"]
 _RULE_WORDS = ["remember", "from now on", "always", "never", "please", "remind", "avoid"]
 
@@ -546,35 +550,119 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
     return (should, summary, tags)
 
 
+# Patterns to infer a user name from natural language utterances
+_NAME_PATTERNS = [
+    re.compile(r"\bmy name is\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"\bi am\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"\bi'm\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"(?:我叫|我是)\s*([A-Za-z\u4e00-\u9fa5][A-Za-z0-9_\-\u4e00-\u9fa5 ]{0,40})", re.I),
+]
+
+
+def _infer_user_id_from_utterance(utter: str) -> Optional[str]:
+    """
+    Try to infer a userId from utterances like:
+      'my name is Sky' / 'I'm Sky' / 'I am Sky' / '我叫小明' / '我是小明'
+    """
+    u = (utter or "").strip()
+    for pat in _NAME_PATTERNS:
+        m = pat.search(u)
+        if m:
+            name = m.group(1).strip()
+            name = re.sub(r"\s+", " ", name)  # collapse whitespace
+            name = name.strip(".,!?:;，。！？：；")  # trim trailing punctuation
+            if name:
+                return name
+    return None
+
+
 @app.post("/mem0/auto")
-def mem0_auto(req: MemAutoReq, db: Session = Depends(get_db), _=Depends(auth)):
+def mem0_auto(
+        req: MemAutoReq,
+        request: Request,
+        db: Session = Depends(get_db),
+        _=Depends(auth),
+        x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
+    """
+    Auto memory endpoint:
+      - Accepts every user utterance.
+      - Infers/uses userId (req.userId > header X-User-Id > infer from utterance > 'guest').
+      - Heuristically decides if content is memory-worthy (or use suggest_text/tags).
+      - Applies de-duplication and saves if not duplicate.
+      - Returns a detailed result for the agent to decide whether to acknowledge.
+    """
+    # 1) Normalize utterance
     utter = (req.utterance or "").strip()
     if not utter:
-        return {"should_save": False, "reason": "empty utterance"}
+        return {
+            "ok": True,
+            "should_save": False,
+            "saved": False,
+            "reason": "empty utterance",
+            "userId": (req.userId or x_user_id or "guest")
+        }
 
-    if req.suggest_text:
+    # 2) Decide userId
+    user_id = (req.userId or x_user_id or _infer_user_id_from_utterance(utter) or "guest")
+
+    # 3) Build summary/tags (suggest_* takes precedence if provided)
+    if req.suggest_text and req.suggest_text.strip():
         should = True
         summary = req.suggest_text.strip()
         tags = req.suggest_tags or []
-        if not summary:
-            return {"should_save": False, "reason": "empty suggest_text"}
     else:
         should, summary, tags = _classify_and_summarize(utter)
 
-    if not should:
-        return {"should_save": False, "reason": "not memory-worthy"}
+    # 4) Normalize dedupe threshold
+    try:
+        dedupe_th = float(req.dedupe_threshold)
+    except Exception:
+        dedupe_th = 0.9
+    dedupe_th = max(0.5, min(0.99, dedupe_th))
 
+    # 5) If not memory-worthy, return without writing
+    if not should or not summary:
+        if DEBUG_LOG:
+            print(f"[AUTO] skip (not-worthy) user={user_id} text={utter[:80]!r}", flush=True)
+        return {
+            "ok": True,
+            "should_save": False,
+            "saved": False,
+            "reason": "not memory-worthy",
+            "userId": user_id,
+            "summary": summary or "",
+            "tags": tags or [],
+        }
+
+    # 6) Attempt save with de-dup
     result = _save_memory(
         db=db,
-        user_id=req.userId,
+        user_id=user_id,
         text=summary,
         tags=tags,
         created_ts=None,
-        dedupe_threshold=max(0.5, min(0.99, req.dedupe_threshold))
+        dedupe_threshold=dedupe_th,
     )
 
-    resp = {"should_save": True, "summary": summary, "tags": tags}
-    resp.update(result)
+    # 7) Build response
+    resp = {
+        "ok": True,
+        "should_save": True,  # heuristic decision says "worthy"
+        "saved": bool(result.get("id")),  # only true if actually inserted
+        "userId": user_id,
+        "summary": summary,
+        "tags": tags or [],
+    }
+    resp.update(result)  # includes id / skipped / dup_id / score
+
+    if DEBUG_LOG:
+        status = "SAVED" if resp.get("saved") else f"SKIP({resp.get('skipped')})"
+        score = resp.get("score")
+        extra = f" score={score}" if score is not None else ""
+        print(f"[AUTO] {status} user={user_id} th={dedupe_th}{extra} text={utter[:80]!r} -> summary={summary!r}",
+              flush=True)
+
     return resp
 
 
