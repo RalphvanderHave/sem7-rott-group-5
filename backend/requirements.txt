@@ -1,0 +1,17 @@
+# Core web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# Database ORM
+SQLAlchemy==2.0.36
+
+# Environment configuration
+python-dotenv==1.0.1
+
+# Machine learning model for embeddings
+sentence-transformers==3.2.1
+numpy==1.26.4
+
+# Optional (useful for testing & dev tools)
+pydantic==2.9.2
+typing-extensions>=4.8.0

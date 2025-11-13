@@ -1,0 +1,76 @@
+{
+  "type": "webhook",
+  "name": "auto_mem0",
+  "description": "Decide whether the latest user utterance is memory-worthy and save it automatically (with de-dup). Called after every user utterance.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/auto",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Body for automatic memory saving.",
+      "properties": [
+        {
+          "id": "dedupe_threshold",
+          "type": "number",
+          "value_type": "llm_prompt",
+          "description": "Duplicate similarity threshold (0.5–0.99). Default 0.9.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "utterance",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Latest user message text.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "userId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "User identifier; the AI may provide it or omit it (backend can infer).",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "lUBjq5iUpRNLWnrbgQNH"
+      },
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

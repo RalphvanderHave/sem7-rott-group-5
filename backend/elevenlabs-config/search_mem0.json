@@ -1,0 +1,75 @@
+{
+  "type": "webhook",
+  "name": "search_mem0",
+  "description": "Search long-term memories (preferences, habits, events) for a given user.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/mem0/search",
+    "method": "GET",
+    "path_params_schema": [],
+    "query_params_schema": [
+      {
+        "id": "query",
+        "type": "string",
+        "value_type": "llm_prompt",
+        "description": "Semantic search query or keywords.",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": true
+      },
+      {
+        "id": "userId",
+        "type": "string",
+        "value_type": "llm_prompt",
+        "description": "User identifier to search memories for.",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": true
+      },
+      {
+        "id": "minSimilarity",
+        "type": "number",
+        "value_type": "llm_prompt",
+        "description": "Minimum cosine similarity threshold between 0 and 1 (e.g., 0.9).",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": false
+      },
+      {
+        "id": "topK",
+        "type": "integer",
+        "value_type": "llm_prompt",
+        "description": "Max number of results to return (default 5).",
+        "dynamic_variable": "",
+        "constant_value": "",
+        "enum": null,
+        "is_system_provided": false,
+        "required": false
+      }
+    ],
+    "request_body_schema": null,
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "lUBjq5iUpRNLWnrbgQNH"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

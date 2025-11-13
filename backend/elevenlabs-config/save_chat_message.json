@@ -1,0 +1,94 @@
+{
+  "type": "webhook",
+  "name": "save_chat_message",
+  "description": "Save user or assistant messages to backend storage.",
+  "api_schema": {
+    "url": "https://lt-001434231557.tailb2509f.ts.net/save",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body payload used to persist chat messages.",
+      "required": true,
+      "properties": [
+        {
+          "id": "userId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "User identifier for storing the message.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "role",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Message role. Must be one of: user, assistant, system.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": [
+            "user",
+            "assistant",
+            "system"
+          ],
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "text",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Message text content to be saved.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "ts",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional ISO-8601 timestamp of the message.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        }
+      ],
+      "dynamic_variable": null,
+      "constant_value": null,
+      "value_type": "llm_prompt",
+      "enum": null
+    },
+    "request_headers": [
+      {
+        "type": "secret",
+        "name": "Authorization",
+        "secret_id": "1dWlxsjfInYkqJLi5Y3P"
+      },
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "response_timeout_secs": 20,
+  "force_pre_tool_speech": "auto",
+  "execution_mode": "immediate"
+}
