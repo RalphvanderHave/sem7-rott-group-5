@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Conversation } from '@11labs/client'
 import Avatar from './Avatar'
+import { analyzeEmotionWithAI, warmUpModel } from './services/emotionAnalysis'
 import './App.css'
 
 function App() {
@@ -42,107 +43,67 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const detectEmotion = (text) => {
-    if (!text) return 'talking'
-    
-    const textLower = text.toLowerCase()
-    console.log('🔍 Detecting emotion for text:', textLower)
-    
-    // Happy emotions - English + Dutch
-    const happyWords = [
-      // English
-      'happy', 'great', 'awesome', 'excellent', 'wonderful', 'fantastic', 'love', 'excited', 
-      'perfect', 'amazing', 'glad', 'pleasure', 'help', 'sure', 'absolutely', 'yes', 'definitely',
-      'good', 'nice', 'cool', 'yay', 'thank', 'thanks',
-      // Dutch
-      'blij', 'gelukkig', 'geweldig', 'fantastisch', 'mooi', 'prachtig', 'super', 'top', 
-      'gewoon', 'leuk', 'fijn', 'lekker', 'ja', 'zeker', 'graag', 'dankjewel', 'bedankt',
-      'goed', 'prima', 'uitstekend', 'perfect', 'heerlijk', 'zalig', 'tof', 'gaaf',
-      '😊', '😄', '🎉', '👍'
-    ]
-    if (happyWords.some(word => textLower.includes(word))) {
-      console.log('✅ Detected HAPPY emotion')
-      return 'happy'
-    }
-    
-    // Sad emotions - English + Dutch
-    const sadWords = [
-      // English
-      'sad', 'sorry', 'unfortunately', 'disappointed', 'bad', 'terrible', 'awful', 'unhappy', 
-      'upset', 'apologize', 'regret', 'frustrated', 'angry', 'mad', 'hate', 'no',
-      // Dutch
-      'verdrietig', 'triest', 'droevig', 'spijt', 'helaas', 'jammer', 'teleurgesteld', 
-      'boos', 'kwaad', 'gefrustreerd', 'slecht', 'vreselijk', 'verschrikkelijk', 
-      'ongelukkig', 'rot', 'ellendig', 'naar', 'nee', 'niet', 'sorry',
-      'niet lekker', 'lekker in vel', 'lekker voelen', 'ongemakkelijk', 'onprettig',
-      'niet lekker in mijn vel', 'niet zo lekker in mijn vel', 'zit niet lekker in mijn vel',
-      '😢', '😞', '😔', '😠'
-    ]
-    if (sadWords.some(word => textLower.includes(word))) {
-      console.log('😢 Detected SAD emotion')
-      return 'sad'
-    }
-    
-    // Surprised emotions - English + Dutch
-    const surprisedWords = [
-      // English
-      'wow', 'really', 'surprise', 'incredible', 'unbelievable', 'oh my', 'amazing', 
-      'no way', 'omg', 'seriously', 'what',
-      // Dutch
-      'wauw', 'wow', 'echt', 'serieus', 'echt waar', 'ongelofelijk', 'verbazingwekkend',
-      'niet te geloven', 'oh', 'wat', 'hoe kan dat', 'onmogelijk', 'jeetje', 'gossie',
-      '😮', '😲', '!'
-    ]
-    if (surprisedWords.some(word => textLower.includes(word))) {
-      console.log('😮 Detected SURPRISED emotion')
-      return 'surprised'
-    }
-    
-    // Thinking/confused emotions - English + Dutch
-    const thinkingWords = [
-      // English
-      'hmm', 'let me', 'think', 'consider', 'understand', 'wondering', 'moment', 
-      'see', 'well', 'maybe', 'perhaps', 'how', 'why', 'what', 'where', 'when',
-      // Dutch
-      'hmm', 'even', 'denken', 'nadenken', 'laat me', 'laat mij', 'begrijpen', 
-      'snappen', 'vraag', 'vraagje', 'hoe', 'waarom', 'wat', 'waar', 'wanneer',
-      'misschien', 'wellicht', 'kijken', 'eens', 'eventjes', 'moment', 'momentje',
-      '🤔', '?'
-    ]
-    if (thinkingWords.some(word => textLower.includes(word))) {
-      console.log('🤔 Detected THINKING emotion')
-      return 'thinking'
-    }
-    
-    console.log('💬 Default TALKING emotion')
-    return 'talking'
-  }
-
-  const addMessage = (role, content) => {
+  const addMessage = async (role, content) => {
     console.log('📝 Adding message:', role, content)
     setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
     
-    // ONLY detect emotion from USER messages (what the user says)
+    // ONLY detect emotion from USER messages using AI
     if (role === 'user') {
-      const detectedEmotion = detectEmotion(content)
-      console.log('🎭 USER said something - Setting avatar emotion to:', detectedEmotion, 'for text:', content)
-      console.log('🔄 Previous emotion was:', emotion)
+      console.log('🔍 Starting emotion analysis for user message...')
       
-      // FORCE update the emotion state
-      setEmotion(detectedEmotion)
-      
-      // Verify the update happened
-      setTimeout(() => {
-        console.log('✅ Emotion should now be:', detectedEmotion)
-      }, 100)
+      try {
+        // Call Hugging Face AI to analyze emotion
+        const result = await analyzeEmotionWithAI(content)
+        
+        console.log('🎭 AI detected emotion:', result.emotion)
+        console.log('📊 Confidence:', result.confidence)
+        console.log('📈 All scores:', result.scores)
+        
+        // If neutral is detected but other emotions are present, pick the highest non-neutral
+        if (result.emotion === 'neutral' && result.scores) {
+          // Check if there are significant non-neutral emotions
+          const nonNeutralEmotions = Object.entries(result.scores)
+            .filter(([emotion]) => emotion !== 'neutral')
+            .sort((a, b) => b[1] - a[1]) // Sort by score descending
+          
+          console.log('🔍 Non-neutral emotions:', nonNeutralEmotions)
+          
+          // If highest non-neutral emotion is > 5%, use it instead
+          if (nonNeutralEmotions.length > 0 && nonNeutralEmotions[0][1] > 0.05) {
+            const [emotionLabel, score] = nonNeutralEmotions[0]
+            
+            // Map to our emotions
+            const emotionMap = {
+              'disgust': 'sad',
+              'anger': 'sad',
+              'sadness': 'sad',
+              'fear': 'sad',
+              'joy': 'happy',
+              'surprise': 'surprised'
+            }
+            
+            const mappedEmotion = emotionMap[emotionLabel] || 'neutral'
+            console.log(`✅ Overriding neutral with ${emotionLabel} (${score.toFixed(3)}) → ${mappedEmotion}`)
+            setEmotion(mappedEmotion)
+          } else {
+            console.log('⚠️ Neutral with low secondary emotions, staying neutral')
+            setEmotion('neutral')
+          }
+        } else if (result.emotion && result.emotion !== 'neutral') {
+          console.log('✅ Setting avatar to:', result.emotion)
+          setEmotion(result.emotion)
+        } else {
+          console.log('⚠️ Keeping current emotion state')
+        }
+      } catch (error) {
+        console.error('❌ Failed to analyze emotion:', error)
+      }
       
       // Clear any existing timeout
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
         emotionTimeoutRef.current = null
       }
-      
-      console.log('✨ Emotion locked at:', detectedEmotion, '- will persist until next user message')
     }
   }
 
@@ -158,6 +119,10 @@ function App() {
 
       setStatus('connecting')
       addMessage('system', '🔄 Connecting to AI agent Alfred...')
+
+      // 🔥 Warm up the emotion detection model in the background
+      console.log('🔥 Starting model warm-up...')
+      warmUpModel() // Don't await - let it run in background
 
       // Initialize audio context for volume monitoring
       if (!audioContextRef.current) {
