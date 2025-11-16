@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import './Avatar.css'
 
 const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
   const [mouthOpen, setMouthOpen] = useState(false)
+  const lastLoggedState = useRef({ emotion: null, isSpeaking: null })
 
-  console.log('🎨 Avatar RE-RENDERING with emotion:', emotion, 'isSpeaking:', isSpeaking)
-
+  // Only log when state actually changes
   useEffect(() => {
-    console.log('🔔 Avatar emotion changed to:', emotion)
-  }, [emotion])
+    if (emotion !== lastLoggedState.current.emotion || isSpeaking !== lastLoggedState.current.isSpeaking) {
+      console.log('🎨 Avatar state changed:', { emotion, isSpeaking })
+      lastLoggedState.current = { emotion, isSpeaking }
+    }
+  }, [emotion, isSpeaking])
 
   useEffect(() => {
     if (isSpeaking) {
@@ -27,6 +30,8 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
         return { leftEye: '😊', rightEye: '😊', eyeClass: 'eyes-happy' }
       case 'sad':
         return { leftEye: '😢', rightEye: '😢', eyeClass: 'eyes-sad' }
+      case 'angry':
+        return { leftEye: '😠', rightEye: '😠', eyeClass: 'eyes-angry' }
       case 'thinking':
         return { leftEye: '🤔', rightEye: '🤔', eyeClass: 'eyes-thinking' }
       case 'surprised':
@@ -50,6 +55,8 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
           : 'M 40 45 Q 50 50 60 45'
       case 'sad':
         return 'M 40 55 Q 50 50 60 55'
+      case 'angry':
+        return 'M 40 52 Q 50 48 60 52'
       case 'surprised':
         return 'M 45 52 Q 50 58 55 52'
       case 'thinking':
@@ -92,6 +99,12 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
             <>
               <path d="M 28 32 Q 35 30 42 32" stroke="#333" strokeWidth="2" fill="none" className="eyebrow" />
               <path d="M 58 32 Q 65 30 72 32" stroke="#333" strokeWidth="2" fill="none" className="eyebrow" />
+            </>
+          )}
+          {emotion === 'angry' && (
+            <>
+              <path d="M 28 35 Q 35 32 42 35" stroke="#333" strokeWidth="2.5" fill="none" className="eyebrow" />
+              <path d="M 58 35 Q 65 32 72 35" stroke="#333" strokeWidth="2.5" fill="none" className="eyebrow" />
             </>
           )}
           {emotion === 'surprised' && (
@@ -149,6 +162,7 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
       <div className="emotion-label" style={{ 
         background: emotion === 'happy' ? '#d3f9d8' : 
                     emotion === 'sad' ? '#e7f5ff' : 
+                    emotion === 'angry' ? '#ffe3e3' :
                     emotion === 'thinking' ? '#fff3bf' : 
                     emotion === 'surprised' ? '#ffe3e3' : 
                     emotion === 'listening' ? '#f3e5ff' : 
@@ -156,6 +170,7 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
                     'white',
         color: emotion === 'happy' ? '#2b8a3e' : 
                emotion === 'sad' ? '#1971c2' : 
+               emotion === 'angry' ? '#c92a2a' :
                emotion === 'thinking' ? '#e67700' : 
                emotion === 'surprised' ? '#c92a2a' : 
                emotion === 'listening' ? '#7950f2' : 
@@ -165,6 +180,7 @@ const Avatar = ({ emotion, isSpeaking, volume, isConnected }) => {
         {emotion === 'neutral' && '😐 Neutral'}
         {emotion === 'happy' && '😊 Happy'}
         {emotion === 'sad' && '😢 Sad'}
+        {emotion === 'angry' && '😠 Angry'}
         {emotion === 'thinking' && '🤔 Thinking'}
         {emotion === 'surprised' && '😮 Surprised'}
         {emotion === 'listening' && '👂 Listening'}

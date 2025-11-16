@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Conversation } from '@11labs/client'
 import Avatar from './Avatar'
-import { analyzeEmotionWithAI, warmUpModel } from './services/emotionAnalysis'
+import { analyzeEmotionWithGemini } from './services/emotionAnalysis'
 import './App.css'
 
 function App() {
@@ -52,54 +52,33 @@ function App() {
       console.log('🔍 Starting emotion analysis for user message...')
       
       try {
-        // Call Hugging Face AI to analyze emotion
-        const result = await analyzeEmotionWithAI(content)
+        // Always use Gemini
+        const result = await analyzeEmotionWithGemini(content)
         
         console.log('🎭 AI detected emotion:', result.emotion)
         console.log('📊 Confidence:', result.confidence)
-        console.log('📈 All scores:', result.scores)
+        if (result.reasoning) console.log('💭 Reasoning:', result.reasoning)
         
-        // If neutral is detected but other emotions are present, pick the highest non-neutral
-        if (result.emotion === 'neutral' && result.scores) {
-          // Check if there are significant non-neutral emotions
-          const nonNeutralEmotions = Object.entries(result.scores)
-            .filter(([emotion]) => emotion !== 'neutral')
-            .sort((a, b) => b[1] - a[1]) // Sort by score descending
-          
-          console.log('🔍 Non-neutral emotions:', nonNeutralEmotions)
-          
-          // If highest non-neutral emotion is > 5%, use it instead
-          if (nonNeutralEmotions.length > 0 && nonNeutralEmotions[0][1] > 0.05) {
-            const [emotionLabel, score] = nonNeutralEmotions[0]
-            
-            // Map to our emotions
-            const emotionMap = {
-              'disgust': 'sad',
-              'anger': 'sad',
-              'sadness': 'sad',
-              'fear': 'sad',
-              'joy': 'happy',
-              'surprise': 'surprised'
-            }
-            
-            const mappedEmotion = emotionMap[emotionLabel] || 'neutral'
-            console.log(`✅ Overriding neutral with ${emotionLabel} (${score.toFixed(3)}) → ${mappedEmotion}`)
-            setEmotion(mappedEmotion)
-          } else {
-            console.log('⚠️ Neutral with low secondary emotions, staying neutral')
-            setEmotion('neutral')
-          }
-        } else if (result.emotion && result.emotion !== 'neutral') {
+        // If AI returns neutral, show happy (conversation is happening)
+        if (result.emotion === 'neutral') {
+          console.log('✅ AI detected neutral, showing happy during conversation')
+          setEmotion('happy')
+        } 
+        // If AI detected a clear emotion, use it
+        else if (result.emotion) {
           console.log('✅ Setting avatar to:', result.emotion)
           setEmotion(result.emotion)
-        } else {
-          console.log('⚠️ Keeping current emotion state')
+        } 
+        // Fallback to happy if no clear result
+        else {
+          console.log('✅ No clear emotion, defaulting to happy')
+          setEmotion('happy')
         }
       } catch (error) {
         console.error('❌ Failed to analyze emotion:', error)
+        setEmotion('happy')
       }
       
-      // Clear any existing timeout
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
         emotionTimeoutRef.current = null
@@ -120,9 +99,8 @@ function App() {
       setStatus('connecting')
       addMessage('system', '🔄 Connecting to AI agent Alfred...')
 
-      // 🔥 Warm up the emotion detection model in the background
-      console.log('🔥 Starting model warm-up...')
-      warmUpModel() // Don't await - let it run in background
+      console.log('🎯 Using Agent ID:', AGENT_ID)
+      console.log('🔑 API Key present:', !!API_KEY)
 
       // Initialize audio context for volume monitoring
       if (!audioContextRef.current) {
@@ -140,119 +118,89 @@ function App() {
         } 
       })
 
+      console.log('🎤 Microphone stream obtained')
+
       // Start the conversation
       const conversation = await Conversation.startSession({
         agentId: AGENT_ID,
         apiKey: API_KEY,
         
         onConnect: () => {
-          console.log('✅ Connected to agent')
+          console.log('✅ CONNECTED')
           setIsConnected(true)
           setStatus('connected')
-          setEmotion('happy')
-          addMessage('system', '✅ Connected! Start speaking to the AI agent Alfred...')
-          
-          // Return to neutral after connection
-          setTimeout(() => {
-            setEmotion('neutral')
-          }, 2000)
+          setEmotion('neutral')
+          addMessage('system', '✅ Connected!')
         },
         
-        onDisconnect: () => {
-          console.log('❌ Disconnected from agent')
+        onDisconnect: (reason) => {
+          console.log('❌ DISCONNECTED - Reason:', JSON.stringify(reason, null, 2))
+          
           setIsConnected(false)
           setStatus('disconnected')
           setVolume(0)
-          setEmotion('neutral')
-          addMessage('system', '🔌 Disconnected from agent')
-        },
-        
-        onMessage: (message) => {
-          console.log('📨 RAW Message received:', JSON.stringify(message, null, 2))
+          setEmotion('sad')
           
-          let userText = null
-          let agentText = null
-          
-          // PRIMARY METHOD: Check source field (this is what ElevenLabs is using!)
-          if (message.source === 'user' && message.message) {
-            userText = message.message
-            console.log('✅ USER MESSAGE FOUND via source field')
-          } else if (message.source === 'ai' && message.message) {
-            agentText = message.message
-            console.log('✅ AI MESSAGE FOUND via source field')
-          }
-          
-          // Fallback Method 1: Direct type check
-          if (!userText && message.type === 'user_transcript') {
-            userText = message.text || message.transcript
-          }
-          
-          // Fallback Method 2: Check message.message object
-          if (!userText && !agentText && message.message) {
-            if (message.message.role === 'user') {
-              userText = message.message.text || message.message.content || message.message.transcript
-            } else if (message.message.role === 'assistant' || message.message.role === 'agent') {
-              agentText = message.message.text || message.message.content
-            }
-          }
-          
-          // Fallback Method 3: Check for transcript field directly
-          if (!userText && message.transcript && message.source === 'user') {
-            userText = message.transcript
-          }
-          
-          // Fallback Method 4: Audio transcript
-          if (!userText && message.type === 'audio' && message.source === 'user') {
-            userText = message.transcript || message.text
-          }
-          
-          // Fallback Method 5: Conversation message type
-          if (!userText && !agentText && message.type === 'message') {
-            if (message.source === 'user' || message.role === 'user') {
-              userText = message.text || message.content || message.transcript
-            }
-          }
-          
-          // Process user text
-          if (userText) {
-            console.log('👤 USER TRANSCRIPT DETECTED:', userText)
-            addMessage('user', userText)
-          }
-          
-          // Process agent text
-          if (agentText) {
-            console.log('🤖 AGENT RESPONSE:', agentText)
-            addMessage('assistant', agentText)
-          }
-          
-          // If nothing was captured, log it
-          if (!userText && !agentText) {
-            console.log('⚠️ Message not captured - source:', message.source, '| type:', message.type)
+          // Check if it's a quota error
+          if (reason?.message?.includes('quota') || reason?.message?.includes('limit')) {
+            addMessage('system', '⚠️ ElevenLabs quota exceeded! Please check your usage at https://elevenlabs.io/app/usage')
+            alert('❌ ElevenLabs API Quota Exceeded!\n\nYour account has reached its usage limit.\n\n✅ Solutions:\n1. Upgrade your plan at https://elevenlabs.io/app/subscription\n2. Wait for monthly reset\n3. Use a different API key')
+          } else {
+            addMessage('system', `🔌 Disconnected: ${reason?.message || 'Connection ended'}`)
           }
         },
-        
+
         onError: (error) => {
-          console.error('❌ Conversation error:', error)
+          console.error('❌ ERROR:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
           setStatus('error')
           setEmotion('sad')
           addMessage('system', `⚠️ Error: ${error.message || 'Unknown error occurred'}`)
         },
         
+        onMessage: (message) => {
+          console.log('📨 Message received - Type:', message.type, 'Source:', message.source)
+          console.log('Full message:', JSON.stringify(message, null, 2))
+          
+          let userText = null
+          let agentText = null
+          
+          // PRIMARY METHOD: Check source field
+          if (message.source === 'user' && message.message) {
+            userText = message.message
+            console.log('✅ USER MESSAGE FOUND:', userText)
+          } else if (message.source === 'ai' && message.message) {
+            agentText = message.message
+            console.log('✅ AI MESSAGE FOUND:', agentText)
+          }
+          
+          // Process user text - THIS TRIGGERS GEMINI EMOTION ANALYSIS
+          if (userText) {
+            console.log('👤 USER TRANSCRIPT DETECTED - Calling addMessage')
+            addMessage('user', userText)
+          }
+          
+          // Process agent text
+          if (agentText) {
+            console.log('🤖 AGENT RESPONSE - Calling addMessage')
+            addMessage('assistant', agentText)
+          }
+        },
+        
         onModeChange: (mode) => {
-          console.log('🔄 Mode changed:', JSON.stringify(mode, null, 2))
           const newMode = mode.mode || mode
+          console.log('🔄 MODE:', newMode)
           setStatus(newMode)
-          const wasSpeaking = isSpeaking
           setIsSpeaking(newMode === 'speaking')
           
-          console.log('🎤 Mode:', newMode, '| isSpeaking:', newMode === 'speaking', '| Current emotion:', emotion)
-          
-          // NEVER override user emotions from mode changes
-          // Log but don't change emotion
-          console.log('✨ Emotion locked at:', emotion, '- waiting for next user message')
+          if (newMode === 'thinking') {
+            setEmotion('thinking')
+          }
         }
       })
 
+      console.log('✅ Conversation session created successfully')
+      console.log('Conversation object:', conversation)
       conversationRef.current = conversation
 
       // Set up volume monitoring
@@ -269,6 +217,8 @@ function App() {
         }
       }
       updateVolume()
+
+      console.log('✅ Audio monitoring started')
 
     } catch (error) {
       console.error('❌ Failed to start conversation:', error)
@@ -291,17 +241,20 @@ function App() {
   }
 
   const endConversation = async () => {
+    console.log('🔌 User requested to end conversation')
+    
     if (conversationRef.current) {
       try {
         await conversationRef.current.endSession()
+        console.log('✅ Session ended successfully')
       } catch (error) {
-        console.error('Error ending session:', error)
+        console.error('⚠️ Error ending session:', error)
       }
       conversationRef.current = null
       setIsConnected(false)
       setStatus('disconnected')
       setVolume(0)
-      setEmotion('neutral') // Reset to neutral when conversation ends
+      setEmotion('neutral')
       addMessage('system', '👋 Conversation ended')
     }
     

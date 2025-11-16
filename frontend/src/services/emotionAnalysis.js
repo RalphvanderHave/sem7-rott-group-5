@@ -1,158 +1,106 @@
-const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Multilingual emotion detection model (automatically handles Dutch + English)
-const EMOTION_MODEL = "j-hartmann/emotion-english-distilroberta-base"
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
-// NEW API ENDPOINT
-const HUGGINGFACE_API_URL = `https://router.huggingface.co/hf-inference/models/${EMOTION_MODEL}`
+// Rate limiting to avoid quota issues
+let lastRequestTime = 0
+const MIN_REQUEST_INTERVAL = 3000 // 3 seconds between requests
 
-// Retry configuration
-const MAX_RETRIES = 3
-const RETRY_DELAY = 3000 // 3 seconds
-
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-// Function to warm up the model (call this when starting conversation)
-export async function warmUpModel() {
-  console.log('🔥 Warming up emotion detection model...')
-  
-  try {
-    const response = await fetch(HUGGINGFACE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: "Hello", // Simple text to wake up the model
-      }),
-    })
-
-    if (response.ok) {
-      await response.json()
-      console.log('✅ Model warmed up and ready!')
-      return true
-    } else {
-      console.log('⚠️ Model warm-up initiated, may take a moment...')
-      return false
-    }
-  } catch (error) {
-    console.log('⚠️ Model warm-up error (this is okay):', error.message)
-    return false
-  }
-}
-
-export async function analyzeEmotionWithAI(text) {
+export async function analyzeEmotionWithGemini(text) {
   if (!text || text.trim().length === 0) {
-    console.log('⚠️ Empty text, returning neutral')
     return { emotion: 'neutral', scores: {} }
   }
 
-  console.log('🔍 Analyzing emotion with AI for text:', text)
-  console.log('🔑 API Key present:', !!HUGGINGFACE_API_KEY)
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your_gemini_api_key_here') {
+    console.log('⚠️ No Gemini key configured, skipping analysis.')
+    return { emotion: 'neutral', scores: {} }
+  }
+
+  // Rate limiting
+  const now = Date.now()
+  const timeSinceLastRequest = now - lastRequestTime
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+    const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest
+    console.log(`⏳ Rate limiting: waiting ${waitTime}ms`)
+    await new Promise(resolve => setTimeout(resolve, waitTime))
+  }
+  lastRequestTime = Date.now()
+
+  console.log('🔍 Analyzing with Gemini SDK:', text)
 
   try {
-    console.log('📡 Calling Hugging Face API...')
-    const startTime = Date.now()
+    // 1. Initialize the SDK with your API key
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
     
-    const response = await fetch(HUGGINGFACE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: text,
-      }),
-    })
+    // 2. Try different models by attempting generateContent call
+    const modelNames = [
+      "gemini-pro", 
+      "gemini-1.0-pro", 
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-flash",
+      "text-bison-001"
+    ]
+    
+    const prompt = `Analyseer de emotie in de volgende tekst (Nederlands of Engels).
 
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2)
-    console.log(`📡 API Response: ${response.status} (${elapsed}s)`)
+Geef het antwoord in dit JSON formaat (zonder extra tekst):
+{"emotion": "happy|sad|angry|surprised|neutral", "confidence": 0.0-1.0, "reasoning": "korte uitleg"}
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('❌ API Error Response:', errorText)
-      
-      // Try to parse as JSON
+Emoties:
+- happy: blij, vrolijk, positief, enthousiast, goed gevoel
+- sad: verdrietig, teleurgesteld, down, slecht gevoel, somber
+- angry: boos, gefrustreerd, geïrriteerd, kwaad
+- surprised: verbaasd, verrast, wow
+- neutral: neutraal, informatief, geen duidelijke emotie
+
+Tekst: "${text}"`
+
+    let lastError = null
+    
+    for (const modelName of modelNames) {
       try {
-        const errorJson = JSON.parse(errorText)
-        console.error('❌ Parsed Error:', errorJson)
-      } catch (e) {
-        console.error('❌ Raw Error:', errorText)
+        console.log(`🔍 Trying model: ${modelName}`)
+        const model = genAI.getGenerativeModel({ model: modelName })
+        
+        // Test the model by actually calling generateContent
+        const result = await model.generateContent(prompt)
+        const response = result.response
+        const content = response.text().trim()
+        
+        console.log(`✅ Working model found: ${modelName}`)
+        console.log('🤖 Gemini SDK Response:', content)
+        
+        // Extract and parse the JSON response
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (!jsonMatch) {
+          throw new Error('No valid JSON found in Gemini response')
+        }
+        
+        const parsed = JSON.parse(jsonMatch[0])
+        
+        console.log('✅ Gemini Detected:', parsed.emotion, 'confidence:', parsed.confidence)
+        console.log('💭 Reasoning:', parsed.reasoning)
+
+        return {
+          emotion: parsed.emotion,
+          confidence: parsed.confidence,
+          scores: { [parsed.emotion]: parsed.confidence },
+          reasoning: parsed.reasoning
+        }
+      } catch (error) {
+        console.log(`❌ Model ${modelName} failed: ${error.message}`)
+        lastError = error
+        continue // Try next model
       }
-      
-      throw new Error(`API error: ${response.status}`)
     }
-
-    const result = await response.json()
-    console.log('🤖 AI Emotion Analysis RAW:', JSON.stringify(result, null, 2))
-    console.log('🤖 Result type:', typeof result)
-    console.log('🤖 Is array:', Array.isArray(result))
-
-    // Handle response format: [[{ label: "joy", score: 0.9 }, ...]]
-    let emotions = []
     
-    if (Array.isArray(result)) {
-      console.log('✅ Result is array, length:', result.length)
-      
-      if (result[0] && Array.isArray(result[0])) {
-        emotions = result[0]
-        console.log('✅ Found nested array with', emotions.length, 'emotions')
-      } else if (result[0] && typeof result[0] === 'object') {
-        emotions = result
-        console.log('✅ Found direct array with', emotions.length, 'emotions')
-      }
-    }
-
-    if (emotions.length === 0) {
-      console.error('❌ No emotions found in response')
-      console.error('❌ Full result:', result)
-      return { emotion: 'neutral', scores: {}, error: 'No emotions found' }
-    }
-
-    // Map AI emotion labels to our avatar emotions
-    const emotionMap = {
-      'joy': 'happy',
-      'happiness': 'happy',
-      'sadness': 'sad',
-      'anger': 'sad',
-      'fear': 'sad',
-      'surprise': 'surprised',
-      'disgust': 'sad',
-      'neutral': 'neutral'
-    }
-
-    // Find highest scoring emotion
-    let highestScore = 0
-    let detectedEmotion = 'neutral'
-    const scores = {}
-
-    emotions.forEach(({ label, score }) => {
-      const normalizedLabel = label.toLowerCase()
-      scores[normalizedLabel] = score
-      
-      console.log(`  - ${label}: ${score.toFixed(3)}`)
-      
-      if (score > highestScore) {
-        highestScore = score
-        detectedEmotion = emotionMap[normalizedLabel] || 'neutral'
-      }
-    })
-
-    console.log('✨ Emotion Scores:', scores)
-    console.log('🎭 Detected Emotion:', detectedEmotion, 'with score:', highestScore)
-
-    return {
-      emotion: detectedEmotion,
-      scores: scores,
-      confidence: highestScore
-    }
-
+    // If all models failed, throw the last error
+    throw lastError || new Error('All Gemini models failed')
+    
   } catch (error) {
-    console.error('❌ Emotion analysis error:', error.message)
-    console.error('❌ Full error:', error)
+    console.error('❌ Gemini SDK error:', error)
+    // Return neutral if the API fails, so the app doesn't crash
     return { emotion: 'neutral', scores: {}, error: error.message }
   }
 }
