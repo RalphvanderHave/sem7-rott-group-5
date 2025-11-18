@@ -436,3 +436,126 @@
 .avatar-section {
   /* Styles handled in Avatar.css */
 }
+
+/* auth */
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 260px;
+}
+
+.auth-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-form input {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.auth-form input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.auth-form input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
+
+.auth-button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #51cf66; /* 跟主按钮绿色同风格 */
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(81, 207, 102, 0.4);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.auth-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(81, 207, 102, 0.5);
+}
+
+.auth-button.logout {
+  background: #ff6b6b;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.auth-button.logout:hover {
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.5);
+}
+
+.auth-toggle {
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.auth-toggle:hover {
+  color: #ffd43b;
+}
+
+.auth-logged-in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-user {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(4px);
+}
+
+
+.auth-error {
+  margin: 10px 30px 0;
+  padding: 8px 12px;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.7);
+  border-radius: 10px;
+  color: #c92a2a;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .auth-panel {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 15px;
+  }
+
+  .auth-form {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}

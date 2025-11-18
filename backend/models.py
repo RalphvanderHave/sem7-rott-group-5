@@ -1,5 +1,16 @@
+# /backend/models.py
 from sqlalchemy import Column, String, Text, DateTime, JSON, LargeBinary, CheckConstraint, Index
 from db import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+
 
 
 class Message(Base):
