@@ -302,8 +302,40 @@ async def debug_logger(request: Request, call_next):
 
 
 # -------------------- User Register & Login --------------------
+@app.post("/register", response_model=AuthResp)
+def register(req: RegisterReq, db: Session = Depends(get_db)):
+    """
+    Register a new user.
+    Stores username + salted SHA-256 hashed password in the DB.
+    """
+    username = (req.username or "").strip().lower()
+    if not username or not req.password:
+        raise HTTPException(status_code=400, detail="username and password are required")
+
+    # Check if user exists
+    existing = db.query(User).filter(User.username == username).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="username already exists")
+
+    user = User(
+        id=str(uuid4()),
+        username=username,
+        password_hash=hash_password(req.password),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(user)
+    db.commit()
+
+    return AuthResp(userId=username)
+
+
 @app.post("/login", response_model=AuthResp)
 def login(req: LoginReq, db: Session = Depends(get_db)):
+    """
+    Simple username/password login.
+    - Looks up user in DB
+    - Verifies password using verify_password()
+    """
     username = (req.username or "").strip().lower()
 
     if not username or not req.password:
