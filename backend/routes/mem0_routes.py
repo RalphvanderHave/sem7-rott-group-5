@@ -12,9 +12,9 @@ import numpy as np
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from ..db import get_db
-from ..models import Memory
-from ..utils import embed, parse_ts, iso_datetime, DEBUG_LOG, auth
+from db import get_db
+from models import Memory
+from utils import embed, parse_ts, iso_datetime, DEBUG_LOG, auth
 
 router = APIRouter(tags=["mem0"])
 

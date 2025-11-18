@@ -1,6 +1,6 @@
 # /backend/utils.py
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import numpy as np
@@ -62,7 +62,7 @@ def now_iso() -> str:
     """
     Current UTC time in ISO-8601 string.
     """
-    return datetime.utcnow().isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def iso_datetime(dt: datetime) -> str:
@@ -81,9 +81,12 @@ def parse_ts(s: Optional[str]) -> datetime:
     Fallback: now().
     """
     if not s:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
     try:
         dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        return dt if dt.tzinfo else datetime.utcfromtimestamp(dt.timestamp())
+        if dt.tzinfo is None:
+            # 没有时区信息时，显式标记为 UTC
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
