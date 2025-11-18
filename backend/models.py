@@ -1,5 +1,6 @@
+# /backend/models.py
 from sqlalchemy import Column, String, Text, DateTime, JSON, LargeBinary, CheckConstraint, Index
-from db import Base
+from .db import Base
 
 
 class Message(Base):
