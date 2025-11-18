@@ -27,5 +27,6 @@ def get_db():
 
 def init_db():
     # Import to register the model
-    from .models import Message, Memory  # noqa: F401
+    from models import User, Message, Memory  # noqa: F401
     Base.metadata.create_all(bind=engine)
+

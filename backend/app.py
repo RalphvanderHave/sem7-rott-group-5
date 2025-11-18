@@ -1,11 +1,12 @@
 # /backend/app.py
+from datetime import datetime, timezone
 import os
 import json
 import subprocess
 import time
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, Depends, Query, Request
+from fastapi import FastAPI, Depends, Query, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import dotenv_values
@@ -13,9 +14,10 @@ from dotenv import dotenv_values
 from uuid import uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from passlib.context import CryptContext
 
 from .db import init_db, get_db, DATABASE_URL
-from .models import Message
+from .models import Message, User
 from .routes.mem0_routes import router as mem0_router
 from .utils import (
     auth,
@@ -47,6 +49,21 @@ if os.path.exists(".tailscale"):
     except Exception as e:
         print(f"[WARN] Could not load .tailscale file: {e}")
 
+# Password hash configuration (for user registration/login)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
+
+
 # -------------------- FastAPI --------------------
 app = FastAPI(title="Alfred Backend (Mem0-local)")
 
@@ -70,6 +87,20 @@ class SaveReq(BaseModel):
     ts: Optional[str] = None
     chatId: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
+
+
+class RegisterReq(BaseModel):
+    username: str
+    password: str
+
+
+class LoginReq(BaseModel):
+    username: str
+    password: str
+
+
+class AuthResp(BaseModel):
+    userId: str
 
 
 # -------------------- Tailscale helpers --------------------
@@ -240,6 +271,53 @@ async def debug_logger(request: Request, call_next):
         raise
 
 
+# -------------------- User Register & Login --------------------
+@app.post("/register", response_model=AuthResp)
+def register(req: RegisterReq, db: Session = Depends(get_db)):
+    """
+    Register a new user.
+    Stores username + bcrypt-hashed password in the DB.
+    """
+    username = (req.username or "").strip().lower()
+    if not username or not req.password:
+        raise HTTPException(status_code=400, detail="username and password are required")
+
+    # Check if user exists
+    existing = db.query(User).filter(User.username == username).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="username already exists")
+
+    user = User(
+        id=str(uuid4()),
+        username=username,
+        password_hash=hash_password(req.password),
+        created_at=datetime.utcnow(),
+    )
+    db.add(user)
+    db.commit()
+
+    return AuthResp(userId=username)
+
+
+@app.post("/login", response_model=AuthResp)
+def login(req: LoginReq, db: Session = Depends(get_db)):
+    """
+    Simple username/password login.
+    - Looks up user in DB
+    - Verifies bcrypt password
+    - Returns userId for the frontend
+    """
+    username = (req.username or "").strip().lower()
+    if not username or not req.password:
+        raise HTTPException(status_code=400, detail="username and password are required")
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not verify_password(req.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    return AuthResp(userId=username)
+
+
 # -------------------- Health --------------------
 @app.get("/health")
 def health():
@@ -256,10 +334,10 @@ def health():
 # -------------------- Chat history (optional) --------------------
 @app.get("/history")
 def get_history(
-    userId: str = Query(...),
-    limit: int = Query(20, ge=1, le=200),
-    db: Session = Depends(get_db),
-    _=Depends(auth),
+        userId: str = Query(...),
+        limit: int = Query(20, ge=1, le=200),
+        db: Session = Depends(get_db),
+        _=Depends(auth),
 ):
     rows = (
         db.query(Message)

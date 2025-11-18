@@ -11,6 +11,14 @@ function App() {
   const [messages, setMessages] = useState([])
   const [volume, setVolume] = useState(0)
   const [emotion, setEmotion] = useState('neutral')
+
+  // user
+  const [userId, setUserId] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [isRegisterMode, setIsRegisterMode] = useState(false)
+
   
   const conversationRef = useRef(null)
   const audioContextRef = useRef(null)
@@ -21,6 +29,8 @@ function App() {
 
   const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
   const AGENT_ID = import.meta.env.VITE_AGENT_ID
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://lt-001434231557.tailb2509f.ts.net\n'
+
 
   useEffect(() => {
     return () => {
@@ -85,6 +95,72 @@ function App() {
       }
     }
   }
+
+  // users
+    const handleAuth = async () => {
+    setAuthError('')
+
+    if (!userId || !password) {
+      setAuthError('Please fill in username and password.')
+      return
+    }
+
+    const endpoint = isRegisterMode ? '/register' : '/login'
+
+    try {
+      const res = await fetch(`${BACKEND_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: userId,
+          password: password,
+        }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Auth failed')
+      }
+
+      // 后端返回 { userId: "xxx" }
+      setIsLoggedIn(true)
+      setUserId(data.userId)
+      setPassword('')
+      setAuthError('')
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'system',
+          content: isRegisterMode
+            ? `✅ Registered and logged in as ${data.userId}`
+            : `✅ Logged in as ${data.userId}`,
+          timestamp: Date.now(),
+        },
+      ])
+    } catch (err) {
+      console.error('❌ Auth error:', err)
+      setIsLoggedIn(false)
+      setAuthError(err.message || 'Auth failed')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setPassword('')
+    setAuthError('')
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'system',
+        content: '👋 Logged out',
+        timestamp: Date.now(),
+      },
+    ])
+  }
+
 
   const startConversation = async () => {
     try {
@@ -293,16 +369,59 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>🤖 Alfred</h1>
-          <p>Real-time AI Agent • Powered by ElevenLabs</p>
+          <div>
+            <h1>🤖 Alfred</h1>
+            <p>Real-time AI Agent • Powered by ElevenLabs</p>
+          </div>
+
+          <div className="auth-panel">
+            {isLoggedIn ? (
+                <div className="auth-logged-in">
+                  <span className="auth-user">👤 {userId}</span>
+                  <button className="auth-button logout" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </div>
+            ) : (
+                <div className="auth-form">
+                  <input
+                      type="text"
+                      placeholder="Username"
+                      value={userId}
+                      onChange={(e) => setUserId(e.target.value)}
+                  />
+                  <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button className="auth-button" onClick={handleAuth}>
+                    {isRegisterMode ? 'Register' : 'Login'}
+                  </button>
+                  <button
+                      className="auth-toggle"
+                      type="button"
+                      onClick={() => setIsRegisterMode((prev) => !prev)}
+                  >
+                    {isRegisterMode ? 'Have an account? Login' : 'New here? Register'}
+                  </button>
+                </div>
+            )}
+          </div>
         </header>
+        {authError && (
+        <div className="auth-error">
+          ⚠️ {authError}
+        </div>
+        )}
 
         <div className="avatar-section">
-          <Avatar 
-            emotion={emotion} 
-            isSpeaking={isSpeaking}
-            volume={volume}
-            isConnected={isConnected}
+          <Avatar
+              emotion={emotion}
+              isSpeaking={isSpeaking}
+              volume={volume}
+              isConnected={isConnected}
           />
         </div>
 
@@ -311,34 +430,34 @@ function App() {
             {statusInfo.text}
           </div>
           {isConnected && (
-            <div className="volume-indicator">
-              <div 
-                className="volume-bar" 
-                style={{ width: `${volume}%` }}
-              />
-            </div>
+              <div className="volume-indicator">
+                <div
+                    className="volume-bar"
+                    style={{width: `${volume}%`}}
+                />
+              </div>
           )}
         </div>
 
         <div className="chat-container">
           <div className="messages">
             {messages.length === 0 && (
-              <div className="welcome-message">
-                <h2>👋 Welcome bij Alfred the AI assistent!</h2>
-                <p>Klik "Start Conversation" om het gesprek in real-time te beginnen.</p>
-              </div>
+                <div className="welcome-message">
+                  <h2>👋 Welcome bij Alfred the AI assistent!</h2>
+                  <p>Klik "Start Conversation" om het gesprek in real-time te beginnen.</p>
+                </div>
             )}
             {messages.map((msg, index) => (
-              <div key={index} className={`message ${msg.role}`}>
-                <div className="message-content">
-                  {msg.content}
+                <div key={index} className={`message ${msg.role}`}>
+                  <div className="message-content">
+                    {msg.content}
+                  </div>
                 </div>
-              </div>
             ))}
             {status === 'thinking' && (
-              <div className="message assistant">
-                <div className="message-content typing">
-                  <span></span><span></span><span></span>
+                <div className="message assistant">
+                  <div className="message-content typing">
+                    <span></span><span></span><span></span>
                 </div>
               </div>
             )}
