@@ -1,4 +1,5 @@
-# mem0_routes.py
+# /backend/routes/mem0_routes.py
+import os
 import re
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
@@ -8,69 +9,14 @@ from pydantic import BaseModel
 from uuid import uuid4
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
-
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from db import get_db
-from models import Memory
+from ..db import get_db
+from ..models import Memory
+from ..utils import embed, parse_ts, iso_datetime, DEBUG_LOG, auth
 
-# 这里为了避免循环依赖，先简单用环境变量控制：
-import os
-DEBUG_LOG = os.getenv("DEBUG_LOG", "0") == "1"
-MEM_MODEL_NAME = os.getenv("MEM_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-
-# ===== router 对象 =====
 router = APIRouter(tags=["mem0"])
-
-# ===== 简单 auth（可以和 app.py 公用一套逻辑，后面再抽共用模块） =====
-AUTH_TOKEN = os.getenv("AUTH_TOKEN", "")
-
-def auth(authorization: Optional[str] = Header(None)):
-    if not AUTH_TOKEN:
-        return
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
-    token = authorization.split(" ", 1)[1]
-    if token != AUTH_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
-# ===== 时间 & embedding 工具 =====
-_model: SentenceTransformer = None
-
-def _load_model() -> SentenceTransformer:
-    global _model
-    if _model is None:
-        if DEBUG_LOG:
-            print(f"[INFO] Loading embedding model (mem0_routes): {MEM_MODEL_NAME}")
-        _model = SentenceTransformer(MEM_MODEL_NAME)
-    return _model
-
-def _embed(texts: List[str]) -> np.ndarray:
-    model = _load_model()
-    vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
-    return vecs.astype(np.float32, copy=False)
-
-def _from_bytes(b: bytes) -> np.ndarray:
-    return np.frombuffer(b, dtype=np.float32)
-
-def _parse_ts(s: Optional[str]) -> datetime:
-    if not s:
-        return datetime.utcnow()
-    try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        return dt if dt.tzinfo else datetime.utcfromtimestamp(dt.timestamp())
-    except Exception:
-        return datetime.utcnow()
-
-def _iso(dt: datetime) -> str:
-    try:
-        return dt.isoformat()
-    except Exception:
-        return datetime.utcnow().isoformat()
-
 
 # ===== Pydantic models =====
 class MemSearchReq(BaseModel):
@@ -78,18 +24,22 @@ class MemSearchReq(BaseModel):
     query: Optional[str] = None
     top_k: int = 5
 
+
 class MemAddReq(BaseModel):
     userId: str
     text: str
     tags: Optional[List[str]] = None
     ts: Optional[str] = None
 
+
 class MemDeleteReq(BaseModel):
     userId: str
     id: str
 
+
 class MemClearReq(BaseModel):
     userId: str
+
 
 class MemAutoReq(BaseModel):
     userId: Optional[str] = None
@@ -99,14 +49,19 @@ class MemAutoReq(BaseModel):
     dedupe_threshold: float = 0.9
 
 
+# ===== 辅助函数 =====
+def _from_bytes(b: bytes) -> np.ndarray:
+    return np.frombuffer(b, dtype=np.float32)
+
+
 # ===== 内部 memory 保存逻辑 =====
 def _save_memory(
-        db: Session,
-        user_id: str,
-        text: str,
-        tags: Optional[List[str]] = None,
-        created_ts: Optional[str] = None,
-        dedupe_threshold: float = 0.9
+    db: Session,
+    user_id: str,
+    text: str,
+    tags: Optional[List[str]] = None,
+    created_ts: Optional[str] = None,
+    dedupe_threshold: float = 0.9,
 ) -> Dict[str, Any]:
     # 🔥 user_id 统一小写
     user_id = (user_id or "").strip().lower()
@@ -117,7 +72,7 @@ def _save_memory(
     if not text:
         raise HTTPException(status_code=400, detail="text is required")
 
-    q_vec = _embed([text])[0]
+    q_vec = embed([text])[0]
     mems = db.query(Memory).filter(Memory.user_id == user_id).all()
 
     best_score = -1.0
@@ -142,7 +97,7 @@ def _save_memory(
         user_id=user_id,
         text=text,
         tags=tags or [],
-        created_at=_parse_ts(created_ts),
+        created_at=parse_ts(created_ts),
         embedding=q_vec.tobytes(),
     )
     db.add(mem)
@@ -159,10 +114,18 @@ _RULE_WORDS = ["remember", "from now on", "always", "never", "please", "remind",
 DATE_RE = re.compile(r"(20\d{2}-\d{2}-\d{2})")
 TIME_RE = re.compile(r"\b([01]?\d|2[0-3]):([0-5]\d)\b")
 
+_NAME_PATTERNS = [
+    re.compile(r"\bmy name is\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"\bi am\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"\bi'm\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
+    re.compile(r"(?:我叫|我是)\s*([A-Za-z\u4e00-\u9fa5][A-Za-z0-9_\-\u4e00-\u9fa5 ]{0,40})", re.I),
+]
+
+
 def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
     u = (utterance or "").strip()
     if not u:
-        return (False, "", [])
+        return False, "", []
 
     u_lower = u.lower()
     tags: List[str] = []
@@ -206,17 +169,12 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
         if any(x in u_lower for x in ["doctor", "medicine"]):
             tags.append("health")
 
-        tags = list(dict.fromkeys(tags))
+        # 去重但保留顺序
+        seen = set()
+        tags = [t for t in tags if not (t in seen or seen.add(t))]
 
-    return (should, summary, tags)
+    return should, summary, tags
 
-
-_NAME_PATTERNS = [
-    re.compile(r"\bmy name is\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
-    re.compile(r"\bi am\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
-    re.compile(r"\bi'm\s+([A-Za-z][A-Za-z0-9_\- ]{1,40})", re.I),
-    re.compile(r"(?:我叫|我是)\s*([A-Za-z\u4e00-\u9fa5][A-Za-z0-9_\-\u4e00-\u9fa5 ]{0,40})", re.I),
-]
 
 def _infer_user_id_from_utterance(utter: str) -> Optional[str]:
     u = (utter or "").strip()
@@ -231,8 +189,7 @@ def _infer_user_id_from_utterance(utter: str) -> Optional[str]:
     return None
 
 
-# ====== 下面是 mem0 系列 endpoint（带打印 body & userId 小写） ======
-
+# ===== mem0 endpoints =====
 @router.post("/mem0/add")
 def mem0_add(req: MemAddReq, request: Request, db: Session = Depends(get_db), _=Depends(auth)):
     if DEBUG_LOG:
@@ -268,12 +225,15 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
     if not user_id:
         raise HTTPException(status_code=400, detail="userId is required")
 
+    top_k = max(1, req.top_k)
+
+    # no query: return latest memories
     if not req.query or not req.query.strip():
         items = (
             db.query(Memory)
             .filter(Memory.user_id == user_id)
             .order_by(desc(Memory.created_at))
-            .limit(max(1, req.top_k))
+            .limit(top_k)
             .all()
         )
         return {
@@ -282,14 +242,14 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
                     "id": m.id,
                     "text": m.text,
                     "tags": m.tags or [],
-                    "created_at": _iso(m.created_at),
+                    "created_at": iso_datetime(m.created_at),
                     "score": None,
                 }
                 for m in items
             ]
         }
 
-    q_vec = _embed([req.query])[0]
+    q_vec = embed([req.query])[0]
     mems = db.query(Memory).filter(Memory.user_id == user_id).all()
 
     scored: List[Tuple[float, Memory]] = []
@@ -299,7 +259,7 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
         scored.append((score, m))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    top = scored[: max(1, req.top_k)]
+    top = scored[:top_k]
 
     return {
         "items": [
@@ -307,7 +267,7 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
                 "id": m.id,
                 "text": m.text,
                 "tags": m.tags or [],
-                "created_at": _iso(m.created_at),
+                "created_at": iso_datetime(m.created_at),
                 "score": round(score, 4),
             }
             for score, m in top
@@ -330,6 +290,7 @@ def mem0_delete(req: MemDeleteReq, request: Request, db: Session = Depends(get_d
     m = db.query(Memory).filter(Memory.user_id == user_id, Memory.id == req.id).first()
     if not m:
         raise HTTPException(status_code=404, detail="memory not found")
+
     db.delete(m)
     db.commit()
     return {"ok": True}
@@ -354,13 +315,12 @@ def mem0_clear(req: MemClearReq, request: Request, db: Session = Depends(get_db)
 
 @router.post("/mem0/auto")
 def mem0_auto(
-        req: MemAutoReq,
-        request: Request,
-        db: Session = Depends(get_db),
-        _=Depends(auth),
-        x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    req: MemAutoReq,
+    request: Request,
+    db: Session = Depends(get_db),
+    _=Depends(auth),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
-    # 🔥 在终端打印 endpoint 接收到的 body
     if DEBUG_LOG:
         print("\n[REQ] /mem0/auto -----------------", flush=True)
         print("Headers:", dict(request.headers), flush=True)
@@ -368,10 +328,12 @@ def mem0_auto(
         print("[REQ END] ------------------------\n", flush=True)
 
     utter = (req.utterance or "").strip()
+
+    # unify userId & lower
+    inferred = _infer_user_id_from_utterance(utter) if utter else None
+    user_id = (req.userId or x_user_id or inferred or "guest").strip().lower()
+
     if not utter:
-        # utter 为空时也统一小写 userId
-        user_id = (req.userId or x_user_id or "guest")
-        user_id = user_id.strip().lower()
         return {
             "ok": True,
             "should_save": False,
@@ -379,10 +341,6 @@ def mem0_auto(
             "reason": "empty utterance",
             "userId": user_id,
         }
-
-    # 统一 userId 来源，并转为小写
-    user_id = (req.userId or x_user_id or _infer_user_id_from_utterance(utter) or "guest")
-    user_id = user_id.strip().lower()
 
     if req.suggest_text and req.suggest_text.strip():
         should = True
@@ -419,7 +377,7 @@ def mem0_auto(
         dedupe_threshold=dedupe_th,
     )
 
-    resp = {
+    resp: Dict[str, Any] = {
         "ok": True,
         "should_save": True,
         "saved": bool(result.get("id")),
@@ -434,7 +392,8 @@ def mem0_auto(
         score = resp.get("score")
         extra = f" score={score}" if score is not None else ""
         print(
-            f"[AUTO] {status} user={user_id} th={dedupe_th}{extra} text={utter[:80]!r} -> summary={summary!r}",
+            f"[AUTO] {status} user={user_id} th={dedupe_th}{extra} "
+            f"text={utter[:80]!r} -> summary={summary!r}",
             flush=True,
         )
 

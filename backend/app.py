@@ -1,35 +1,35 @@
+# /backend/app.py
 import os
 import json
 import subprocess
 import time
-from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, Depends, Header, HTTPException, Query, Request
+from fastapi import FastAPI, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 from uuid import uuid4
-import numpy as np
-from sentence_transformers import SentenceTransformer
-
-from db import init_db, get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from models import Message
-
-# 引入 mem0 路由（你放在 routes/mem0_routes.py 里）
-from routes.mem0_routes import router as mem0_router
+from .db import init_db, get_db, DATABASE_URL
+from .models import Message
+from .routes.mem0_routes import router as mem0_router
+from .utils import (
+    auth,
+    load_model,
+    now_iso,
+    iso_datetime,
+    parse_ts,
+    DEBUG_LOG,
+    MEM_MODEL_NAME,
+    AUTH_TOKEN,
+)
 
 # -------------------- Environment --------------------
-load_dotenv()
 PORT = int(os.getenv("PORT", "3000"))
-AUTH_TOKEN = os.getenv("AUTH_TOKEN", "")
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./alfred.db")
-DEBUG_LOG = os.getenv("DEBUG_LOG", "0") == "1"
-MEM_MODEL_NAME = os.getenv("MEM_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 DISABLE_CHAT_SAVE = os.getenv("DISABLE_CHAT_SAVE", "1") == "1"
 
 # Tailscale & Funnel switches
@@ -37,8 +37,6 @@ ENABLE_TAILSCALE_FUNNEL = os.getenv("ENABLE_TAILSCALE_FUNNEL", "0") == "1"
 TAILSCALE_FUNNEL_PORT = int(os.getenv("TAILSCALE_FUNNEL_PORT", str(PORT)))
 
 # Load Tailscale auth key from .tailscale file if present
-from dotenv import dotenv_values
-
 TAILSCALE_AUTH_KEY: Optional[str] = None
 if os.path.exists(".tailscale"):
     try:
@@ -54,71 +52,14 @@ app = FastAPI(title="Alfred Backend (Mem0-local)")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 生产环境记得收紧
+    allow_origins=["*"],  # tighten in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 注册 mem0 路由
+# Register mem0 router
 app.include_router(mem0_router)
-
-
-# -------------------- Authentication --------------------
-def auth(authorization: Optional[str] = Header(None)):
-    """
-    Simple bearer token auth.
-    If AUTH_TOKEN is not set, auth is disabled.
-    """
-    if not AUTH_TOKEN:
-        return
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
-    token = authorization.split(" ", 1)[1]
-    if token != AUTH_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
-# -------------------- Embedding utils (仅用于启动时预加载模型，可选) --------------------
-_model: SentenceTransformer = None
-
-
-def _load_model() -> SentenceTransformer:
-    """Lazy-load the embedding model (singleton)."""
-    global _model
-    if _model is None:
-        if DEBUG_LOG:
-            print(f"[INFO] Loading embedding model (app): {MEM_MODEL_NAME}")
-        _model = SentenceTransformer(MEM_MODEL_NAME)
-    return _model
-
-
-def _embed(texts: List[str]) -> np.ndarray:
-    """Encode text into normalized float32 vectors."""
-    model = _load_model()
-    vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
-    return vecs.astype(np.float32, copy=False)
-
-
-def _now_iso() -> str:
-    return datetime.utcnow().isoformat()
-
-
-def _iso(dt: datetime) -> str:
-    try:
-        return dt.isoformat()
-    except Exception:
-        return datetime.utcnow().isoformat()
-
-
-def _parse_ts(s: Optional[str]) -> datetime:
-    if not s:
-        return datetime.utcnow()
-    try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        return dt if dt.tzinfo else datetime.utcfromtimestamp(dt.timestamp())
-    except Exception:
-        return datetime.utcnow()
 
 
 # -------------------- Request models --------------------
@@ -136,23 +77,37 @@ def _start_tailscale_service_windows() -> None:
     """
     Ensure Tailscale Windows service is running and logged in.
     Idempotent: safe to call multiple times.
+    Only relevant on Windows hosts.
     """
+    if os.name != "nt":
+        return
+
     try:
         # Start the Windows service (no-op if already running)
         subprocess.run(
             ["sc", "start", "Tailscale"],
-            check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
 
         # Check login state
         st = subprocess.run(["tailscale", "status"], capture_output=True, text=True)
-        logged_in = (st.returncode == 0 and "logged out" not in (st.stdout + st.stderr).lower())
+        output = (st.stdout + st.stderr).lower()
+        logged_in = st.returncode == 0 and "logged out" not in output
+
         if not logged_in:
             if TAILSCALE_AUTH_KEY:
                 print("[INFO] Logging into Tailscale with auth key...")
-                subprocess.run(["tailscale", "up", f"--authkey={TAILSCALE_AUTH_KEY}"], check=False)
+                subprocess.run(
+                    ["tailscale", "up", f"--authkey={TAILSCALE_AUTH_KEY}"],
+                    check=False,
+                )
             else:
-                print("[WARN] Tailscale not logged in and no auth key is set. Run `tailscale up` once.")
+                print(
+                    "[WARN] Tailscale not logged in and no auth key is set. "
+                    "Run `tailscale up` once manually."
+                )
     except FileNotFoundError:
         print("[WARN] `tailscale` CLI not found. Install Tailscale and ensure it's in PATH.")
     except Exception as e:
@@ -165,6 +120,7 @@ def _parse_funnel_url_from_status_text(text: str) -> Optional[str]:
     """
     if not text:
         return None
+
     for line in text.splitlines():
         s = line.strip()
         if s.startswith("https://") and ".ts.net" in s:
@@ -173,9 +129,16 @@ def _parse_funnel_url_from_status_text(text: str) -> Optional[str]:
 
 
 def _get_funnel_url() -> Optional[str]:
-    """Return the current Funnel URL if Funnel is active on this node."""
+    """
+    Return the current Funnel URL if Funnel is active on this node.
+    """
     try:
-        j = subprocess.run(["tailscale", "funnel", "status", "--json"], capture_output=True, text=True)
+        # Prefer JSON output
+        j = subprocess.run(
+            ["tailscale", "funnel", "status", "--json"],
+            capture_output=True,
+            text=True,
+        )
         if j.returncode == 0 and j.stdout.strip():
             try:
                 data = json.loads(j.stdout)
@@ -185,7 +148,11 @@ def _get_funnel_url() -> Optional[str]:
                 pass
 
         # Fallback: plain text
-        t = subprocess.run(["tailscale", "funnel", "status"], capture_output=True, text=True)
+        t = subprocess.run(
+            ["tailscale", "funnel", "status"],
+            capture_output=True,
+            text=True,
+        )
         if t.returncode == 0:
             return _parse_funnel_url_from_status_text(t.stdout)
     except Exception:
@@ -202,20 +169,22 @@ def _enable_tailscale_funnel(port: int) -> None:
             ["tailscale", "funnel", "reset"],
             check=False,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
         )
 
-        cmd = ["tailscale", "funnel", "--bg", f"{port}"]
+        cmd = ["tailscale", "funnel", "--bg", str(port)]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             print(f"[WARN] `{' '.join(cmd)}` failed: {res.stderr.strip() or res.stdout.strip()}")
+            # Fallback to explicit HTTPS mapping
             res2 = subprocess.run(
                 ["tailscale", "funnel", "--bg", "--https=443", f"localhost:{port}"],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
             if res2.returncode != 0:
                 print(
-                    f"[WARN] Fallback `tailscale funnel --https=443 localhost:{port}` failed: "
+                    "[WARN] Fallback `tailscale funnel --https=443 localhost:{port}` failed: "
                     f"{res2.stderr.strip() or res2.stdout.strip()}"
                 )
 
@@ -231,7 +200,7 @@ def _enable_tailscale_funnel(port: int) -> None:
         print(f"[WARN] Could not enable Tailscale Funnel: {e}")
 
 
-def ensure_funnel_if_enabled():
+def ensure_funnel_if_enabled() -> None:
     """
     Called on startup and __main__:
       - Start Tailscale service on Windows; login via .tailscale auth key if needed.
@@ -239,6 +208,7 @@ def ensure_funnel_if_enabled():
     """
     if not ENABLE_TAILSCALE_FUNNEL:
         return
+
     _start_tailscale_service_windows()
     _enable_tailscale_funnel(TAILSCALE_FUNNEL_PORT)
 
@@ -260,7 +230,7 @@ async def debug_logger(request: Request, call_next):
             print(
                 f"[DEBUG] {client} {request.method} {request.url.path} -> "
                 f"{response.status_code} ({dur_ms:.1f} ms)",
-                flush=True
+                flush=True,
             )
         return response
     except Exception as e:
@@ -275,7 +245,7 @@ async def debug_logger(request: Request, call_next):
 def health():
     return {
         "ok": True,
-        "time": _now_iso(),
+        "time": now_iso(),
         "db": DATABASE_URL,
         "chat_save": not DISABLE_CHAT_SAVE,
         "model": MEM_MODEL_NAME,
@@ -283,13 +253,13 @@ def health():
     }
 
 
-# -------------------- Chat history (optional, disabled by default) --------------------
+# -------------------- Chat history (optional) --------------------
 @app.get("/history")
 def get_history(
-        userId: str = Query(...),
-        limit: int = Query(20, ge=1, le=200),
-        db: Session = Depends(get_db),
-        _=Depends(auth)
+    userId: str = Query(...),
+    limit: int = Query(20, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _=Depends(auth),
 ):
     rows = (
         db.query(Message)
@@ -299,14 +269,14 @@ def get_history(
         .all()
     )
     rows = list(reversed(rows))
-    return {"messages": [{"role": r.role, "text": r.text, "ts": _iso(r.ts)} for r in rows]}
+    return {"messages": [{"role": r.role, "text": r.text, "ts": iso_datetime(r.ts)} for r in rows]}
 
 
-# -------------------- /save (with printing body) --------------------
+# -------------------- /save --------------------
 @app.post("/save")
 def save_message(req: SaveReq, request: Request, db: Session = Depends(get_db), _=Depends(auth)):
     """
-    Disabled by default unless DISABLE_CHAT_SAVE=0.
+    Persist chat messages when DISABLE_CHAT_SAVE=0.
     """
     if DEBUG_LOG:
         print("\n[REQ] /save -----------------", flush=True)
@@ -327,7 +297,7 @@ def save_message(req: SaveReq, request: Request, db: Session = Depends(get_db), 
         chat_id=req.chatId,
         role=role,
         text=req.text,
-        ts=_parse_ts(req.ts),
+        ts=parse_ts(req.ts),
         meta=req.meta,
     )
     db.add(msg)
@@ -339,12 +309,14 @@ def save_message(req: SaveReq, request: Request, db: Session = Depends(get_db), 
 @app.on_event("startup")
 def on_startup():
     init_db()
-    # 预加载 embedding 模型，避免第一次请求时卡顿（可选）
-    _load_model()
+    # Optional: preload embedding model to avoid first-request latency
+    load_model()
+
     print("[INFO] Alfred backend ready.")
     print(f"[INFO] Database: {DATABASE_URL}")
     print(f"[INFO] Auth: {'ON' if AUTH_TOKEN else 'OFF'}")
     print(f"[INFO] Chat saving: {'DISABLED' if DISABLE_CHAT_SAVE else 'ENABLED'}")
+
     # Best-effort: enable Tailscale Serve + Funnel
     ensure_funnel_if_enabled()
 
@@ -354,4 +326,4 @@ if __name__ == "__main__":
 
     # Best-effort: enable Tailscale Serve + Funnel before binding the port
     ensure_funnel_if_enabled()
-    uvicorn.run("app:app", host="0.0.0.0", port=PORT, reload=True)
+    uvicorn.run("backend.app:app", host="0.0.0.0", port=PORT, reload=True)
