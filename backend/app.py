@@ -64,7 +64,7 @@ def hash_password(password: str) -> str:
     if not isinstance(password, str):
         raise ValueError("password must be a string")
 
-    # 生成 16 字节随机盐
+    # Generate a 16-byte random salt
     salt = secrets.token_hex(16)
     pw_bytes = (salt + password).encode("utf-8")
     digest = hashlib.sha256(pw_bytes).hexdigest()
@@ -78,13 +78,13 @@ def verify_password(plain_password: str, stored_hash: str) -> bool:
     try:
         salt, digest = stored_hash.split("$", 1)
     except ValueError:
-        # 格式不对，直接判定失败
+        # Incorrect format will result in immediate failure.
         return False
 
     pw_bytes = (salt + plain_password).encode("utf-8")
     check = hashlib.sha256(pw_bytes).hexdigest()
 
-    # 使用 hmac.compare_digest 防止时序攻击
+    # Use hmac.compare_digest to prevent timing attacks
     return hmac.compare_digest(check, digest)
 
 

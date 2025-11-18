@@ -49,12 +49,12 @@ class MemAutoReq(BaseModel):
     dedupe_threshold: float = 0.9
 
 
-# ===== 辅助函数 =====
+# ===== Auxiliary Functions =====
 def _from_bytes(b: bytes) -> np.ndarray:
     return np.frombuffer(b, dtype=np.float32)
 
 
-# ===== 内部 memory 保存逻辑 =====
+# ===== Internal memory storage logic =====
 def _save_memory(
     db: Session,
     user_id: str,
@@ -63,7 +63,7 @@ def _save_memory(
     created_ts: Optional[str] = None,
     dedupe_threshold: float = 0.9,
 ) -> Dict[str, Any]:
-    # 🔥 user_id 统一小写
+    # 🔥 user_id lower
     user_id = (user_id or "").strip().lower()
     if not user_id:
         raise HTTPException(status_code=400, detail="userId is required")
@@ -105,7 +105,7 @@ def _save_memory(
     return {"ok": True, "id": mem.id}
 
 
-# ===== 分类 & userId 推断 =====
+# ===== Category & userId Inference =====
 _PREF_WORDS = ["like", "love", "prefer", "enjoy", "dislike", "hate"]
 _HABIT_WORDS = ["every day", "each morning", "each night", "routine", "habit", "every week", "weekly"]
 _EVENT_WORDS = ["appointment", "meeting", "visit", "birthday", "doctor", "dentist"]
@@ -169,7 +169,7 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
         if any(x in u_lower for x in ["doctor", "medicine"]):
             tags.append("health")
 
-        # 去重但保留顺序
+        # Remove duplicates but preserve order
         seen = set()
         tags = [t for t in tags if not (t in seen or seen.add(t))]
 
