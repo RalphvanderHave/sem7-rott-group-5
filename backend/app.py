@@ -375,7 +375,7 @@ def get_history(
 ):
     rows = (
         db.query(Message)
-        .filter(Message.user_id == userId)
+        .filter(Message.username == userId)
         .order_by(desc(Message.ts))
         .limit(limit)
         .all()
@@ -405,7 +405,7 @@ def save_message(req: SaveReq, request: Request, db: Session = Depends(get_db), 
 
     msg = Message(
         id=str(uuid4()),
-        user_id=req.userId,
+        username =req.userId,
         chat_id=req.chatId,
         role=role,
         text=req.text,

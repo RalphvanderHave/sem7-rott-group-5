@@ -16,7 +16,7 @@ class User(Base):
 class Message(Base):
     __tablename__ = "messages"
     id = Column(String, primary_key=True)  # uuid
-    user_id = Column(String, nullable=False, index=True)
+    username = Column(String, nullable=False, index=True)
     chat_id = Column(String, nullable=True, index=True)
     role = Column(String, nullable=False)  # user | assistant | system
     text = Column(Text, nullable=False)
@@ -37,11 +37,11 @@ class Memory(Base):
     """
     __tablename__ = "memories"
     id = Column(String, primary_key=True)  # uuid
-    user_id = Column(String, index=True, nullable=False)
+    username = Column(String, index=True, nullable=False)
     text = Column(Text, nullable=False)
     tags = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False)
     embedding = Column(LargeBinary, nullable=False)
 
 
-Index("ix_memories_user_id_created_at", Memory.user_id, Memory.created_at.desc())
+Index("ix_memories_username _created_at", Memory.username , Memory.created_at.desc())
