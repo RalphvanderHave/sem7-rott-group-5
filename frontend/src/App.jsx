@@ -57,25 +57,31 @@ function App() {
   const addMessage = async (role, content) => {
     console.log('📝 Adding message:', role, content)
     setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
-
+    
     // ONLY detect emotion from USER messages using AI
     if (role === 'user') {
       console.log('🔍 Starting emotion analysis for user message...')
-
+      
       try {
+        // Always use Gemini
         const result = await analyzeEmotionWithGemini(content)
-
+        
         console.log('🎭 AI detected emotion:', result.emotion)
         console.log('📊 Confidence:', result.confidence)
         if (result.reasoning) console.log('💭 Reasoning:', result.reasoning)
-
+        
+        // If AI returns neutral, show happy (conversation is happening)
         if (result.emotion === 'neutral') {
           console.log('✅ AI detected neutral, showing happy during conversation')
           setEmotion('happy')
-        } else if (result.emotion) {
+        } 
+        // If AI detected a clear emotion, use it
+        else if (result.emotion) {
           console.log('✅ Setting avatar to:', result.emotion)
           setEmotion(result.emotion)
-        } else {
+        } 
+        // Fallback to happy if no clear result
+        else {
           console.log('✅ No clear emotion, defaulting to happy')
           setEmotion('happy')
         }
@@ -83,7 +89,7 @@ function App() {
         console.error('❌ Failed to analyze emotion:', error)
         setEmotion('happy')
       }
-
+      
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
         emotionTimeoutRef.current = null
