@@ -176,7 +176,7 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
     return should, summary, tags
 
 
-def _infer_username _from_utterance(utter: str) -> Optional[str]:
+def _infer_username_from_utterance(utter: str) -> Optional[str]:
     u = (utter or "").strip()
     for pat in _NAME_PATTERNS:
         m = pat.search(u)
@@ -330,7 +330,7 @@ def mem0_auto(
     utter = (req.utterance or "").strip()
 
     # unify userId & lower
-    inferred = _infer_username _from_utterance(utter) if utter else None
+    inferred = _infer_username_from_utterance(utter) if utter else None
     username = (req.userId or x_username  or inferred or "guest").strip().lower()
 
     if not utter:

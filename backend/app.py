@@ -52,8 +52,8 @@ if os.path.exists(".tailscale"):
     except Exception as e:
         print(f"[WARN] Could not load .tailscale file: {e}")
 
-# Password hash configuration (for user registration/login)
 
+# Password hash configuration (for user registration/login)
 
 
 def hash_password(password: str) -> str:
@@ -349,7 +349,6 @@ def login(req: LoginReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     return AuthResp(userId=username)
-
 
 
 # -------------------- Health --------------------

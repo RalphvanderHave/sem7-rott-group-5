@@ -4,6 +4,10 @@ import Avatar from './Avatar'
 import { analyzeEmotionWithGemini } from './services/emotionAnalysis'
 import './App.css'
 
+// 🔑 从 .env 读取 ElevenLabs 配置（Vite 环境变量必须以 VITE_ 开头）
+const AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID
+const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
+
 function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -16,97 +20,34 @@ function App() {
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [authError, setAuthError] = useState('')
   const [isRegisterMode, setIsRegisterMode] = useState(false)
+  const [authError, setAuthError] = useState('')
 
+  // Refs for audio processing
   const conversationRef = useRef(null)
   const audioContextRef = useRef(null)
   const analyserRef = useRef(null)
-  const messagesEndRef = useRef(null)
-  const volumeAnimationRef = useRef(null)
-  const emotionTimeoutRef = useRef(null)
+  const dataArrayRef = useRef(null)
+  const volumeIntervalRef = useRef(null)
 
-  const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
-  const AGENT_ID = import.meta.env.VITE_AGENT_ID
-  const BACKEND_URL =
-    import.meta.env.VITE_BACKEND_URL || 'https://lt-001434231557.tailb2509f.ts.net'
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
-  useEffect(() => {
-    return () => {
-      if (conversationRef.current) {
-        conversationRef.current.endSession()
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close()
-      }
-      if (volumeAnimationRef.current) {
-        cancelAnimationFrame(volumeAnimationRef.current)
-      }
-      if (emotionTimeoutRef.current) {
-        clearTimeout(emotionTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const addMessage = async (role, content) => {
-    console.log('📝 Adding message:', role, content)
-    setMessages((prev) => [...prev, { role, content, timestamp: Date.now() }])
-
-    // ONLY detect emotion from USER messages using AI
-    if (role === 'user') {
-      console.log('🔍 Starting emotion analysis for user message...')
-
-      try {
-        // Always use Gemini
-        const result = await analyzeEmotionWithGemini(content)
-
-        console.log('🎭 AI detected emotion:', result.emotion)
-        console.log('📊 Confidence:', result.confidence)
-        if (result.reasoning) console.log('💭 Reasoning:', result.reasoning)
-
-        // If AI returns neutral, show happy (conversation is happening)
-        if (result.emotion === 'neutral') {
-          console.log('✅ AI detected neutral, showing happy during conversation')
-          setEmotion('happy')
-        }
-        // If AI detected a clear emotion, use it
-        else if (result.emotion) {
-          console.log('✅ Setting avatar to:', result.emotion)
-          setEmotion(result.emotion)
-        }
-        // Fallback to happy if no clear result
-        else {
-          console.log('✅ No clear emotion, defaulting to happy')
-          setEmotion('happy')
-        }
-      } catch (error) {
-        console.error('❌ Failed to analyze emotion:', error)
-        setEmotion('happy')
-      }
-
-      if (emotionTimeoutRef.current) {
-        clearTimeout(emotionTimeoutRef.current)
-        emotionTimeoutRef.current = null
-      }
-    }
+  // Helper function: add messages to chat log
+  const addMessage = (role, content) => {
+    const timestamp = Date.now()
+    setMessages((prev) => [...prev, { role, content, timestamp }])
   }
 
-  // users
+  // Authentication handler
   const handleAuth = async () => {
     setAuthError('')
-
     if (!userId || !password) {
-      setAuthError('Please fill in username and password.')
+      setAuthError('Gebruikersnaam en wachtwoord zijn verplicht.')
       return
     }
 
-    const endpoint = isRegisterMode ? '/register' : '/login'
-
     try {
+      const endpoint = isRegisterMode ? '/register' : '/login'
       const res = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -140,26 +81,57 @@ function App() {
         },
       ])
     } catch (err) {
-      console.error('❌ Auth error:', err)
-      setIsLoggedIn(false)
-      setAuthError(err.message || 'Auth failed')
+      console.error('Auth error:', err)
+      setAuthError(err.message || 'Onbekende fout bij inloggen/registreren.')
     }
   }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false)
-    setPassword('')
-    setAuthError('')
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: 'system',
-        content: '👋 Logged out',
-        timestamp: Date.now(),
-      },
-    ])
+  // Monitor volume for visual feedback
+  const startVolumeMonitoring = () => {
+    if (!analyserRef.current || !audioContextRef.current) return
+
+    if (!dataArrayRef.current) {
+      dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount)
+    }
+
+    if (volumeIntervalRef.current) {
+      clearInterval(volumeIntervalRef.current)
+    }
+
+    volumeIntervalRef.current = setInterval(() => {
+      analyserRef.current.getByteTimeDomainData(dataArrayRef.current)
+
+      let sum = 0
+      for (let i = 0; i < dataArrayRef.current.length; i++) {
+        const value = dataArrayRef.current[i] - 128
+        sum += value * value
+      }
+      const rms = Math.sqrt(sum / dataArrayRef.current.length)
+      const normalized = Math.min(1, rms / 50)
+
+      setVolume(normalized)
+    }, 100)
   }
 
+  const stopVolumeMonitoring = () => {
+    if (volumeIntervalRef.current) {
+      clearInterval(volumeIntervalRef.current)
+      volumeIntervalRef.current = null
+    }
+    setVolume(0)
+  }
+
+  // Analyze emotion based on text message
+  const handleEmotionAnalysis = async (text, role) => {
+    try {
+      const resultEmotion = await analyzeEmotionWithGemini(text, role)
+      setEmotion(resultEmotion)
+    } catch (error) {
+      console.error('Emotion analysis failed, keeping previous emotion:', error)
+    }
+  }
+
+  // Start conversation with ElevenLabs
   const startConversation = async () => {
     // 🔒 Block if user is not logged in
     if (!isLoggedIn) {
@@ -181,7 +153,7 @@ function App() {
 
       if (AGENT_ID === 'paste_your_agent_id_here') {
         throw new Error(
-          'Please replace VITE_AGENT_ID in .env with your actual Agent ID from ElevenLabs',
+          'Please replace VITE_ELEVENLABS_AGENT_ID in .env with your actual Agent ID from ElevenLabs',
         )
       }
 
@@ -231,18 +203,17 @@ function App() {
           console.log('❌ DISCONNECTED - Reason:', JSON.stringify(reason, null, 2))
 
           setIsConnected(false)
+          setIsSpeaking(false)
           setStatus('disconnected')
-          setVolume(0)
-          setEmotion('sad')
+          stopVolumeMonitoring()
 
-          // Check if it's a quota error
-          if (reason?.message?.includes('quota') || reason?.message?.includes('limit')) {
+          if (reason?.code === 4003 || reason?.message?.includes('quota')) {
             addMessage(
               'system',
-              '⚠️ ElevenLabs quota exceeded! Please check your usage at https://elevenlabs.io/app/usage',
+              '⚠️ ElevenLabs API quota is op. Controleer je abonnement of API key.',
             )
             alert(
-              '❌ ElevenLabs API Quota Exceeded!\n\nYour account has reached its usage limit.\n\n✅ Solutions:\n1. Upgrade your plan at https://elevenlabs.io/app/subscription\n2. Wait for monthly reset\n3. Use a different API key',
+              '❌ ElevenLabs API Quota Exceeded!\n\nJe API-abonnement is op.\n\n1. Controleer je abonnement\n2. Wacht op maandelijkse reset\n3. Gebruik een andere API key',
             )
           } else {
             addMessage(
@@ -256,285 +227,233 @@ function App() {
           console.error('❌ ERROR:', error)
           console.error('Error details:', JSON.stringify(error, null, 2))
           setStatus('error')
-          setEmotion('sad')
-          addMessage('system', `⚠️ Error: ${error.message || 'Unknown error occurred'}`)
-        },
+          setIsConnected(false)
+          setIsSpeaking(false)
+          stopVolumeMonitoring()
 
-        onMessage: (message) => {
-          console.log(
-            '📨 Message received - Type:',
-            message.type,
-            'Source:',
-            message.source,
-          )
-          console.log('Full message:', JSON.stringify(message, null, 2))
+          const message =
+            error?.message ||
+            error?.toString() ||
+            'Onbekende fout bij verbinden met ElevenLabs.'
 
-          let userText = null
-          let agentText = null
+          addMessage('system', `❌ Error: ${message}`)
 
-          // PRIMARY METHOD: Check source field
-          if (message.source === 'user' && message.message) {
-            userText = message.message
-            console.log('✅ USER MESSAGE FOUND:', userText)
-          } else if (message.source === 'ai' && message.message) {
-            agentText = message.message
-            console.log('✅ AI MESSAGE FOUND:', agentText)
-          }
-
-          // Process user text - THIS TRIGGERS GEMINI EMOTION ANALYSIS
-          if (userText) {
-            console.log('👤 USER TRANSCRIPT DETECTED - Calling addMessage')
-            addMessage('user', userText)
-          }
-
-          // Process agent text
-          if (agentText) {
-            console.log('🤖 AGENT RESPONSE - Calling addMessage')
-            addMessage('assistant', agentText)
+          if (message.toLowerCase().includes('api key')) {
+            alert(
+              '❌ ElevenLabs API Key fout.\n\nControleer of VITE_ELEVENLABS_API_KEY correct is ingesteld in .env en dat je frontend opnieuw is gestart.',
+            )
+          } else {
+            alert(`❌ Fehler bij verbinden met ElevenLabs:\n\n${message}`)
           }
         },
 
-        onModeChange: (mode) => {
-          const newMode = mode.mode || mode
-          console.log('🔄 MODE:', newMode)
-          setStatus(newMode)
-          setIsSpeaking(newMode === 'speaking')
+        onMessage: async (event) => {
+          console.log('📩 MESSAGE EVENT:', event)
 
-          if (newMode === 'thinking') {
-            setEmotion('thinking')
+          if (event?.type === 'input_transcription') {
+            const text = event.transcript || ''
+            addMessage('user', text)
+            handleEmotionAnalysis(text, 'user')
+          }
+
+          if (event?.type === 'agent_response') {
+            const text = event.output[0]?.content[0]?.transcript || ''
+            if (text) {
+              addMessage('assistant', text)
+              handleEmotionAnalysis(text, 'assistant')
+            }
           }
         },
+
+        onAudioStart: () => {
+          console.log('🔊 Audio started (AI is speaking)')
+          setIsSpeaking(true)
+        },
+
+        onAudioEnd: () => {
+          console.log('🔇 Audio ended')
+          setIsSpeaking(false)
+        },
+
+        // Microphone stream
+        micStream: stream,
       })
 
-      console.log('✅ Conversation session created successfully')
-      console.log('Conversation object:', conversation)
+      console.log('✅ Conversation session started')
       conversationRef.current = conversation
 
-      // Set up volume monitoring
-      const source = audioContextRef.current.createMediaStreamSource(stream)
-      source.connect(analyserRef.current)
-
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
-      const updateVolume = () => {
-        if (analyserRef.current && isConnected) {
-          analyserRef.current.getByteFrequencyData(dataArray)
-          const average = dataArray.reduce((a, b) => a + b) / dataArray.length
-          setVolume(Math.min(100, (average / 255) * 200))
-          volumeAnimationRef.current = requestAnimationFrame(updateVolume)
-        }
+      // Connect microphone to analyser
+      if (audioContextRef.current && analyserRef.current) {
+        const source = audioContextRef.current.createMediaStreamSource(stream)
+        source.connect(analyserRef.current)
+        startVolumeMonitoring()
       }
-      updateVolume()
 
-      console.log('✅ Audio monitoring started')
+      // Start conversation interaction
+      await conversation.start()
     } catch (error) {
       console.error('❌ Failed to start conversation:', error)
       setStatus('error')
       setIsConnected(false)
-      setEmotion('sad')
+      setIsSpeaking(false)
+      stopVolumeMonitoring()
 
-      let errorMessage = error.message
-      if (error.message.includes('API key')) {
-        errorMessage = 'Invalid API key. Please check your .env file.'
-      } else if (error.message.includes('Agent')) {
-        errorMessage =
-          'Invalid Agent ID. Please get your Agent ID from ElevenLabs dashboard.'
-      } else if (error.name === 'NotAllowedError') {
-        errorMessage = 'Microphone permission denied. Please allow microphone access.'
-      }
-
-      addMessage('system', `⚠️ ${errorMessage}`)
-      alert(
-        `Failed to start conversation:\n\n${errorMessage}\n\nSteps:\n1. Get your Agent ID from https://elevenlabs.io/app/conversational-ai\n2. Update VITE_AGENT_ID in .env file\n3. Restart the dev server`,
-      )
+      const friendlyMessage =
+        error?.message || 'Kon geen verbinding maken met ElevenLabs. Controleer je instellingen.'
+      addMessage('system', `❌ ${friendlyMessage}`)
     }
   }
 
-  const endConversation = async () => {
-    console.log('🔌 User requested to end conversation')
-
-    if (conversationRef.current) {
-      try {
+  const stopConversation = async () => {
+    try {
+      if (conversationRef.current) {
         await conversationRef.current.endSession()
-        console.log('✅ Session ended successfully')
-      } catch (error) {
-        console.error('⚠️ Error ending session:', error)
+        conversationRef.current = null
       }
-      conversationRef.current = null
-      setIsConnected(false)
+
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+        analyserRef.current = null
+        dataArrayRef.current = null
+      }
+
+      stopVolumeMonitoring()
       setStatus('disconnected')
-      setVolume(0)
-      setEmotion('neutral')
-      addMessage('system', '👋 Conversation ended')
-    }
-
-    if (volumeAnimationRef.current) {
-      cancelAnimationFrame(volumeAnimationRef.current)
-    }
-
-    if (emotionTimeoutRef.current) {
-      clearTimeout(emotionTimeoutRef.current)
-      emotionTimeoutRef.current = null
+      setIsConnected(false)
+      setIsSpeaking(false)
+      addMessage('system', '🔌 Conversation stopped.')
+    } catch (error) {
+      console.error('❌ Error stopping conversation:', error)
+      addMessage('system', '⚠️ Fout bij stoppen van gesprek.')
     }
   }
 
-  const getStatusDisplay = () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopConversation()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const statusLabel = () => {
     switch (status) {
       case 'connecting':
-        return { text: '⏳ Connecting...', class: 'connecting' }
+        return 'Verbinding maken...'
       case 'connected':
-        return { text: '🟢 Connected - Ready to talk', class: 'connected' }
-      case 'listening':
-        return { text: '👂 Listening...', class: 'listening' }
-      case 'thinking':
-        return { text: '🤔 Processing...', class: 'thinking' }
-      case 'speaking':
-        return { text: '🗣️ Agent speaking...', class: 'speaking' }
+        return 'Verbonden'
       case 'error':
-        return { text: '⚠️ Error occurred', class: 'error' }
+        return 'Fout'
+      case 'disconnected':
       default:
-        return { text: '⚪ Disconnected', class: 'disconnected' }
+        return 'Niet verbonden'
     }
   }
 
-  const statusInfo = getStatusDisplay()
-
   return (
-    <div className="app">
-      <div className="container">
-        <header className="header">
-          <div>
-            <h1>🤖 Alfred</h1>
-            <p>Real-time AI Agent • Powered by ElevenLabs</p>
+    <div className="app-container">
+      <div className="left-panel">
+        <div className="auth-card">
+          <h2>🔐 Login / Registratie</h2>
+          <div className="auth-toggle">
+            <button
+              className={!isRegisterMode ? 'active' : ''}
+              onClick={() => setIsRegisterMode(false)}
+            >
+              Inloggen
+            </button>
+            <button
+              className={isRegisterMode ? 'active' : ''}
+              onClick={() => setIsRegisterMode(true)}
+            >
+              Registreren
+            </button>
           </div>
 
-          <div className="auth-panel">
-            {isLoggedIn ? (
-              <div className="auth-logged-in">
-                <span className="auth-user">👤 {userId}</span>
-                <button className="auth-button logout" onClick={handleLogout}>
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="auth-form">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button className="auth-button" onClick={handleAuth}>
-                  {isRegisterMode ? 'Register' : 'Login'}
-                </button>
-                <button
-                  className="auth-toggle"
-                  type="button"
-                  onClick={() => setIsRegisterMode((prev) => !prev)}
-                >
-                  {isRegisterMode ? 'Have an account? Login' : 'New here? Register'}
-                </button>
-              </div>
+          <div className="auth-form">
+            <label>Gebruikersnaam</label>
+            <input
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value.toLowerCase())}
+              placeholder="bijv. jiawei"
+            />
+
+            <label>Wachtwoord</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+
+            {authError && <div className="error-text">{authError}</div>}
+
+            <button className="auth-button" onClick={handleAuth}>
+              {isRegisterMode ? 'Registreren + Inloggen' : 'Inloggen'}
+            </button>
+
+            {isLoggedIn && (
+              <p className="logged-in-text">
+                ✅ Ingelogd als: <strong>{userId}</strong>
+              </p>
             )}
           </div>
-        </header>
-
-        {authError && <div className="auth-error">⚠️ {authError}</div>}
-
-        <div className="avatar-section">
-          <Avatar
-            emotion={emotion}
-            isSpeaking={isSpeaking}
-            volume={volume}
-            isConnected={isConnected}
-          />
         </div>
 
-        <div className="status-indicator">
-          <div className={`status-badge ${statusInfo.class}`}>{statusInfo.text}</div>
-          {isConnected && (
-            <div className="volume-indicator">
-              <div className="volume-bar" style={{ width: `${volume}%` }} />
-            </div>
-          )}
-        </div>
-
-        <div className="chat-container">
-          <div className="messages">
-            {messages.length === 0 && (
-              <div className="welcome-message">
-                <h2>👋 Welcome bij Alfred the AI assistent!</h2>
-                <p>
-                  Klik &quot;Start Conversation&quot; om het gesprek in real-time te
-                  beginnen.
-                </p>
-              </div>
-            )}
-            {messages.map((msg, index) => (
-              <div key={index} className={`message ${msg.role}`}>
-                <div className="message-content">{msg.content}</div>
+        <div className="chat-card">
+          <h2>💬 Gesprekslog</h2>
+          <div className="status-badge">Status: {statusLabel()}</div>
+          <div className="chat-log">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`chat-message ${msg.role}`}>
+                <span className="role-label">
+                  {msg.role === 'user'
+                    ? '👤 Jij'
+                    : msg.role === 'assistant'
+                      ? '🤖 Alfred'
+                      : 'ℹ️ Systeem'}
+                </span>
+                <p>{msg.content}</p>
               </div>
             ))}
-            {status === 'thinking' && (
-              <div className="message assistant">
-                <div className="message-content typing">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
+        </div>
+      </div>
+
+      <div className="right-panel">
+        <div className="avatar-card">
+          <h2>🧠 Alfred (AI Companion)</h2>
+          <Avatar emotion={emotion} isSpeaking={isSpeaking} volume={volume} isConnected={isConnected} />
 
           <div className="controls">
-            {!isConnected ? (
-              <button
-                onClick={startConversation}
-                className="main-button start"
-                disabled={status === 'connecting' || !isLoggedIn}
-              >
-                {!isLoggedIn
-                  ? '🔒 Log eerst in om te starten'
-                  : status === 'connecting'
-                  ? '⏳ Verbinden...'
-                  : '🎙️ Start gesprek'}
-              </button>
-            ) : (
-              <div className="active-controls">
-                <div className="conversation-status">
-                  {isSpeaking && (
-                    <div className="speaking-animation">
-                      <div className="wave"></div>
-                      <div className="wave"></div>
-                      <div className="wave"></div>
-                    </div>
-                  )}
-                  <p className="hint">
-                    {status === 'listening'
-                      ? '🎤 Speak now...'
-                      : status === 'speaking'
-                      ? '🔊 Agent is speaking...'
-                      : status === 'thinking'
-                      ? '🤔 Processing your message...'
-                      : '💬 Ready for conversation'}
-                  </p>
-                </div>
-                <button onClick={endConversation} className="main-button end">
-                  🔴 End Conversation
-                </button>
-                {!isConnected && !isLoggedIn && (
-                  <p className="hint" style={{ marginTop: '10px' }}>
-                    ℹ️ Log in om een gesprek met Alfred te starten.
-                  </p>
-                )}
-              </div>
-            )}
+            <button
+              className={`control-button start ${isConnected ? 'disabled' : ''}`}
+              onClick={startConversation}
+              disabled={isConnected || !isLoggedIn}
+            >
+              🎙️ Start gesprek
+            </button>
+            <button
+              className={`control-button stop ${!isConnected ? 'disabled' : ''}`}
+              onClick={stopConversation}
+              disabled={!isConnected}
+            >
+              ⏹️ Stop gesprek
+            </button>
+          </div>
+
+          <div className="volume-meter">
+            <span>🔊 Volume:</span>
+            <div className="volume-bar">
+              <div className="volume-fill" style={{ width: `${volume * 100}%` }} />
+            </div>
+          </div>
+
+          <div className="emotion-display">
+            <span>🧩 Huidige emotie:</span>
+            <strong>{emotion}</strong>
           </div>
         </div>
 
