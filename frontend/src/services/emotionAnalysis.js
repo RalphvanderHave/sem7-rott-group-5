@@ -1,10 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
-
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
-// Rate limiting
+// Rate limiting to avoid quota issues
 let lastRequestTime = 0
-const MIN_REQUEST_INTERVAL = 3000
+const MIN_REQUEST_INTERVAL = 3000 // 3 seconds between requests
 
 export async function analyzeEmotionWithGemini(text) {
   if (!text || text.trim().length === 0) {
@@ -12,7 +10,7 @@ export async function analyzeEmotionWithGemini(text) {
   }
 
   if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your_gemini_api_key_here') {
-    console.log('⚠️ No Gemini key configured')
+    console.log('⚠️ No Gemini key configured, skipping analysis.')
     return { emotion: 'neutral', scores: {} }
   }
 
@@ -21,24 +19,20 @@ export async function analyzeEmotionWithGemini(text) {
   const timeSinceLastRequest = now - lastRequestTime
   if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
     const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest
+    console.log(`⏳ Rate limiting: waiting ${waitTime}ms`)
     await new Promise(resolve => setTimeout(resolve, waitTime))
   }
   lastRequestTime = Date.now()
 
-  console.log('🔍 Analyzing with Gemini SDK:', text)
+  console.log('🔍 Analyzing with Gemini REST API:', text)
 
-  try {
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-    
-    // Try ONLY the working models for Cloud API keys
-    const modelNames = [
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-flash-001", 
-      "gemini-1.5-pro-latest",
-      "gemini-1.5-pro-001"
-    ]
-    
-    const prompt = `Analyseer de emotie in de volgende tekst (Nederlands of Engels).
+  // Use the working models from your API key (newest first)
+  const modelNames = [
+    'gemini-2.5-flash',           // Stable Gemini 2.5 Flash
+    'gemini-2.0-flash',           // Stable Gemini 2.0 Flash
+  ]
+
+  const prompt = `Analyseer de emotie in de volgende tekst (Nederlands of Engels).
 
 Geef het antwoord in dit JSON formaat (zonder extra tekst):
 {"emotion": "happy|sad|angry|surprised|neutral", "confidence": 0.0-1.0, "reasoning": "korte uitleg"}
@@ -52,26 +46,42 @@ Emoties:
 
 Tekst: "${text}"`
 
-    for (const modelName of modelNames) {
-      try {
-        console.log(`🔍 Trying Gemini model: ${modelName}`)
-        const model = genAI.getGenerativeModel({ model: modelName })
+  for (const modelName of modelNames) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`
+      
+      console.log(`🔍 Trying model: ${modelName}`)
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`✅ Working model found: ${modelName}`)
         
-        const result = await model.generateContent(prompt)
-        const response = result.response
-        const content = response.text().trim()
-        
-        console.log(`✅ Working model: ${modelName}`)
-        console.log('🤖 Response:', content)
+        const content = data.candidates[0].content.parts[0].text.trim()
+        console.log('🤖 Gemini Response:', content)
         
         const jsonMatch = content.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
-          throw new Error('No valid JSON in response')
+          console.log('⚠️ No JSON in response, trying next model...')
+          continue
         }
         
         const parsed = JSON.parse(jsonMatch[0])
         
-        console.log('✅ Detected:', parsed.emotion, 'confidence:', parsed.confidence)
+        console.log('✅ Gemini Detected:', parsed.emotion, 'confidence:', parsed.confidence)
         console.log('💭 Reasoning:', parsed.reasoning)
 
         return {
@@ -80,44 +90,20 @@ Tekst: "${text}"`
           scores: { [parsed.emotion]: parsed.confidence },
           reasoning: parsed.reasoning
         }
-      } catch (error) {
-        console.log(`❌ Model ${modelName} failed:`, error.message)
-        continue
+      } else {
+        console.log(`❌ Model ${modelName} failed: ${response.status}`)
       }
+    } catch (error) {
+      console.log(`❌ Model ${modelName} error:`, error.message)
     }
-    
-    console.error('❌ All Gemini models failed')
-    return { emotion: 'neutral', scores: {}, error: 'All models failed' }
-    
-  } catch (error) {
-    console.error('❌ Gemini SDK error:', error)
-    return { emotion: 'neutral', scores: {}, error: error.message }
   }
-
-  // Try REST API directly
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `${prompt}` }] }]
-        })
-      }
-    )
-
-    if (response.ok) {
-      const data = await response.json()
-      const content = data.candidates[0].content.parts[0].text
-      // ...parse JSON...
-    }
-  } catch (error) {
-    console.log('❌ REST API failed:', error.message)
-  }
+  
+  // All models failed
+  console.error('❌ All Gemini models failed - returning neutral')
+  return { emotion: 'neutral', scores: {}, error: 'All Gemini models unavailable' }
 }
 
 export async function warmUpModel() {
-  console.log('✅ Using Gemini SDK')
+  console.log('✅ Using Gemini 2.5/2.0 Flash for emotion detection')
   return true
 }
