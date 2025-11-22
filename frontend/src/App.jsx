@@ -12,8 +12,8 @@ function App() {
   const [volume, setVolume] = useState(0)
   const [emotion, setEmotion] = useState('neutral')
 
-  // user auth
-  const [userId, setUserId] = useState('')
+  // user
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [authError, setAuthError] = useState('')
@@ -57,29 +57,29 @@ function App() {
   const addMessage = async (role, content) => {
     console.log('📝 Adding message:', role, content)
     setMessages(prev => [...prev, { role, content, timestamp: Date.now() }])
-    
+
     // ONLY detect emotion from USER messages using AI
     if (role === 'user') {
       console.log('🔍 Starting emotion analysis for user message...')
-      
+
       try {
         // Always use Gemini
         const result = await analyzeEmotionWithGemini(content)
-        
+
         console.log('🎭 AI detected emotion:', result.emotion)
         console.log('📊 Confidence:', result.confidence)
         if (result.reasoning) console.log('💭 Reasoning:', result.reasoning)
-        
+
         // If AI returns neutral, show happy (conversation is happening)
         if (result.emotion === 'neutral') {
           console.log('✅ AI detected neutral, showing happy during conversation')
           setEmotion('happy')
-        } 
+        }
         // If AI detected a clear emotion, use it
         else if (result.emotion) {
           console.log('✅ Setting avatar to:', result.emotion)
           setEmotion(result.emotion)
-        } 
+        }
         // Fallback to happy if no clear result
         else {
           console.log('✅ No clear emotion, defaulting to happy')
@@ -89,7 +89,7 @@ function App() {
         console.error('❌ Failed to analyze emotion:', error)
         setEmotion('happy')
       }
-      
+
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
         emotionTimeoutRef.current = null
@@ -97,12 +97,12 @@ function App() {
     }
   }
 
-  // login / register
+  // 🔐 login / register
   const handleAuth = async () => {
     setAuthError('')
 
-    if (!userId || !password) {
-      setAuthError('Vul alstublieft gebruikersnaam en wachtwoord in.')
+    if (!username || !password) {
+      setAuthError('Please fill in username and password.')
       return
     }
 
@@ -111,26 +111,23 @@ function App() {
     try {
       const res = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: userId,
-          password: password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       })
 
       const data = await res.json().catch(() => ({}))
 
-      if (!res.ok) {
-        throw new Error(data.detail || 'Authenticatie mislukt')
-      }
+      if (!res.ok) throw new Error(data.detail || 'Auth failed')
+
+      // 后端目前返回 userId，把它统一映射到 username
+      const returnedName = (data.username || data.userId || username).toLowerCase()
 
       setIsLoggedIn(true)
-      setUserId(data.userId)
+      setUsername(returnedName)
       setPassword('')
       setAuthError('')
-      setMessages(prev => [
+
+      setMessages((prev) => [
         ...prev,
         {
           role: 'system',
@@ -161,6 +158,7 @@ function App() {
     ])
   }
 
+  // ⭐ start conversation
   const startConversation = async () => {
     // 🔒 block if user is not logged in
     if (!isLoggedIn) {
@@ -219,6 +217,12 @@ function App() {
         agentId: AGENT_ID,
         apiKey: API_KEY,
 
+        // 🔑 把用户名作为 dynamic variable 传给 ElevenLabs
+        // 这样 conversation_initiation_client_data 会包含 { type, username: "xxx" }
+        dynamicVariables: {
+          username: username || 'guest',
+        },
+
         onConnect: () => {
           console.log('✅ CONNECTED')
           setIsConnected(true)
@@ -268,45 +272,12 @@ function App() {
           )
         },
 
-        onMessage: message => {
-          console.log(
-            '📨 Message received - Type:',
-            message.type,
-            'Source:',
-            message.source,
-          )
-          console.log('Full message:', JSON.stringify(message, null, 2))
-
-          let userText = null
-          let agentText = null
-
-          if (message.source === 'user' && message.message) {
-            userText = message.message
-            console.log('✅ USER MESSAGE FOUND:', userText)
-          } else if (message.source === 'ai' && message.message) {
-            agentText = message.message
-            console.log('✅ AI MESSAGE FOUND:', agentText)
+        onMessage: (event) => {
+          if (event?.source === 'user' && event.message) {
+            addMessage('user', event.message)
           }
-
-          if (userText) {
-            console.log('👤 USER TRANSCRIPT DETECTED - Calling addMessage')
-            addMessage('user', userText)
-          }
-
-          if (agentText) {
-            console.log('🤖 AGENT RESPONSE - Calling addMessage')
-            addMessage('assistant', agentText)
-          }
-        },
-
-        onModeChange: mode => {
-          const newMode = mode.mode || mode
-          console.log('🔄 MODE:', newMode)
-          setStatus(newMode)
-          setIsSpeaking(newMode === 'speaking')
-
-          if (newMode === 'thinking') {
-            setEmotion('thinking')
+          if (event?.source === 'ai' && event.message) {
+            addMessage('assistant', event.message)
           }
         },
       })
@@ -417,32 +388,34 @@ function App() {
           <div className="auth-panel">
             {isLoggedIn ? (
               <div className="auth-logged-in">
-                <span className="auth-user">👤 {userId}</span>
-                <button className="auth-button logout" onClick={handleLogout}>
-                  Uitloggen
+                <span className="auth-user">👤 {username}</span>
+                <button
+                  className="auth-button logout"
+                  onClick={() => setIsLoggedIn(false)}
+                >
+                  Logout
                 </button>
               </div>
             ) : (
               <div className="auth-form">
                 <input
                   type="text"
-                  placeholder="Gebruikersnaam"
-                  value={userId}
-                  onChange={e => setUserId(e.target.value)}
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
                 <input
                   type="password"
-                  placeholder="Wachtwoord"
+                  placeholder="Password"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button className="auth-button" onClick={handleAuth}>
                   {isRegisterMode ? 'Registreren' : 'Inloggen'}
                 </button>
                 <button
                   className="auth-toggle"
-                  type="button"
-                  onClick={() => setIsRegisterMode(prev => !prev)}
+                  onClick={() => setIsRegisterMode((p) => !p)}
                 >
                   {isRegisterMode
                     ? 'Heb je al een account? Inloggen'

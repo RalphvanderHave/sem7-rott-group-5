@@ -52,8 +52,8 @@ if os.path.exists(".tailscale"):
     except Exception as e:
         print(f"[WARN] Could not load .tailscale file: {e}")
 
-# Password hash configuration (for user registration/login)
 
+# Password hash configuration (for user registration/login)
 
 
 def hash_password(password: str) -> str:
@@ -351,7 +351,6 @@ def login(req: LoginReq, db: Session = Depends(get_db)):
     return AuthResp(userId=username)
 
 
-
 # -------------------- Health --------------------
 @app.get("/health")
 def health():
@@ -375,7 +374,7 @@ def get_history(
 ):
     rows = (
         db.query(Message)
-        .filter(Message.user_id == userId)
+        .filter(Message.username == userId)
         .order_by(desc(Message.ts))
         .limit(limit)
         .all()
@@ -405,7 +404,7 @@ def save_message(req: SaveReq, request: Request, db: Session = Depends(get_db), 
 
     msg = Message(
         id=str(uuid4()),
-        user_id=req.userId,
+        username =req.userId,
         chat_id=req.chatId,
         role=role,
         text=req.text,

@@ -57,15 +57,15 @@ def _from_bytes(b: bytes) -> np.ndarray:
 # ===== Internal memory storage logic =====
 def _save_memory(
     db: Session,
-    user_id: str,
+    username : str,
     text: str,
     tags: Optional[List[str]] = None,
     created_ts: Optional[str] = None,
     dedupe_threshold: float = 0.9,
 ) -> Dict[str, Any]:
-    # 🔥 user_id lower
-    user_id = (user_id or "").strip().lower()
-    if not user_id:
+    # 🔥 username lower
+    username = (username or "").strip().lower()
+    if not username :
         raise HTTPException(status_code=400, detail="userId is required")
 
     text = (text or "").strip()
@@ -73,7 +73,7 @@ def _save_memory(
         raise HTTPException(status_code=400, detail="text is required")
 
     q_vec = embed([text])[0]
-    mems = db.query(Memory).filter(Memory.user_id == user_id).all()
+    mems = db.query(Memory).filter(Memory.username == username ).all()
 
     best_score = -1.0
     best_id = None
@@ -94,7 +94,7 @@ def _save_memory(
 
     mem = Memory(
         id=str(uuid4()),
-        user_id=user_id,
+        username =username ,
         text=text,
         tags=tags or [],
         created_at=parse_ts(created_ts),
@@ -176,7 +176,7 @@ def _classify_and_summarize(utterance: str) -> Tuple[bool, str, List[str]]:
     return should, summary, tags
 
 
-def _infer_user_id_from_utterance(utter: str) -> Optional[str]:
+def _infer_username_from_utterance(utter: str) -> Optional[str]:
     u = (utter or "").strip()
     for pat in _NAME_PATTERNS:
         m = pat.search(u)
@@ -198,13 +198,13 @@ def mem0_add(req: MemAddReq, request: Request, db: Session = Depends(get_db), _=
         print("Body:", req.model_dump(), flush=True)
         print("[REQ END] -----------------------\n", flush=True)
 
-    user_id = (req.userId or "").strip().lower()
-    if not user_id:
+    username = (req.userId or "").strip().lower()
+    if not username :
         raise HTTPException(status_code=400, detail="userId is required")
 
     result = _save_memory(
         db=db,
-        user_id=user_id,
+        username =username ,
         text=req.text,
         tags=req.tags,
         created_ts=req.ts,
@@ -221,8 +221,8 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
         print("Body:", req.model_dump(), flush=True)
         print("[REQ END] ------------------------\n", flush=True)
 
-    user_id = (req.userId or "").strip().lower()
-    if not user_id:
+    username = (req.userId or "").strip().lower()
+    if not username :
         raise HTTPException(status_code=400, detail="userId is required")
 
     top_k = max(1, req.top_k)
@@ -231,7 +231,7 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
     if not req.query or not req.query.strip():
         items = (
             db.query(Memory)
-            .filter(Memory.user_id == user_id)
+            .filter(Memory.username == username )
             .order_by(desc(Memory.created_at))
             .limit(top_k)
             .all()
@@ -250,7 +250,7 @@ def mem0_search(req: MemSearchReq, request: Request, db: Session = Depends(get_d
         }
 
     q_vec = embed([req.query])[0]
-    mems = db.query(Memory).filter(Memory.user_id == user_id).all()
+    mems = db.query(Memory).filter(Memory.username == username ).all()
 
     scored: List[Tuple[float, Memory]] = []
     for m in mems:
@@ -283,11 +283,11 @@ def mem0_delete(req: MemDeleteReq, request: Request, db: Session = Depends(get_d
         print("Body:", req.model_dump(), flush=True)
         print("[REQ END] ------------------------\n", flush=True)
 
-    user_id = (req.userId or "").strip().lower()
-    if not user_id:
+    username = (req.userId or "").strip().lower()
+    if not username :
         raise HTTPException(status_code=400, detail="userId is required")
 
-    m = db.query(Memory).filter(Memory.user_id == user_id, Memory.id == req.id).first()
+    m = db.query(Memory).filter(Memory.username == username , Memory.id == req.id).first()
     if not m:
         raise HTTPException(status_code=404, detail="memory not found")
 
@@ -304,11 +304,11 @@ def mem0_clear(req: MemClearReq, request: Request, db: Session = Depends(get_db)
         print("Body:", req.model_dump(), flush=True)
         print("[REQ END] ------------------------\n", flush=True)
 
-    user_id = (req.userId or "").strip().lower()
-    if not user_id:
+    username = (req.userId or "").strip().lower()
+    if not username :
         raise HTTPException(status_code=400, detail="userId is required")
 
-    db.query(Memory).filter(Memory.user_id == user_id).delete()
+    db.query(Memory).filter(Memory.username == username ).delete()
     db.commit()
     return {"ok": True, "cleared": True}
 
@@ -319,7 +319,7 @@ def mem0_auto(
     request: Request,
     db: Session = Depends(get_db),
     _=Depends(auth),
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_username : Optional[str] = Header(None, alias="X-User-Id"),
 ):
     if DEBUG_LOG:
         print("\n[REQ] /mem0/auto -----------------", flush=True)
@@ -330,8 +330,8 @@ def mem0_auto(
     utter = (req.utterance or "").strip()
 
     # unify userId & lower
-    inferred = _infer_user_id_from_utterance(utter) if utter else None
-    user_id = (req.userId or x_user_id or inferred or "guest").strip().lower()
+    inferred = _infer_username_from_utterance(utter) if utter else None
+    username = (req.userId or x_username  or inferred or "guest").strip().lower()
 
     if not utter:
         return {
@@ -339,7 +339,7 @@ def mem0_auto(
             "should_save": False,
             "saved": False,
             "reason": "empty utterance",
-            "userId": user_id,
+            "userId": username ,
         }
 
     if req.suggest_text and req.suggest_text.strip():
@@ -357,20 +357,20 @@ def mem0_auto(
 
     if not should or not summary:
         if DEBUG_LOG:
-            print(f"[AUTO] skip (not-worthy) user={user_id} text={utter[:80]!r}", flush=True)
+            print(f"[AUTO] skip (not-worthy) user={username } text={utter[:80]!r}", flush=True)
         return {
             "ok": True,
             "should_save": False,
             "saved": False,
             "reason": "not memory-worthy",
-            "userId": user_id,
+            "userId": username ,
             "summary": summary or "",
             "tags": tags or [],
         }
 
     result = _save_memory(
         db=db,
-        user_id=user_id,
+        username =username ,
         text=summary,
         tags=tags,
         created_ts=None,
@@ -381,7 +381,7 @@ def mem0_auto(
         "ok": True,
         "should_save": True,
         "saved": bool(result.get("id")),
-        "userId": user_id,
+        "userId": username ,
         "summary": summary,
         "tags": tags or [],
     }
@@ -392,7 +392,7 @@ def mem0_auto(
         score = resp.get("score")
         extra = f" score={score}" if score is not None else ""
         print(
-            f"[AUTO] {status} user={user_id} th={dedupe_th}{extra} "
+            f"[AUTO] {status} user={username } th={dedupe_th}{extra} "
             f"text={utter[:80]!r} -> summary={summary!r}",
             flush=True,
         )
