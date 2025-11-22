@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
-
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
 // Rate limiting to avoid quota issues
@@ -26,23 +24,15 @@ export async function analyzeEmotionWithGemini(text) {
   }
   lastRequestTime = Date.now()
 
-  console.log('🔍 Analyzing with Gemini SDK:', text)
+  console.log('🔍 Analyzing with Gemini REST API:', text)
 
-  try {
-    // 1. Initialize the SDK with your API key
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-    
-    // 2. Try different models by attempting generateContent call
-    const modelNames = [
-      "gemini-pro", 
-      "gemini-1.0-pro", 
-      "gemini-1.5-flash",
-      "gemini-1.5-pro",
-      "gemini-flash",
-      "text-bison-001"
-    ]
-    
-    const prompt = `Analyseer de emotie in de volgende tekst (Nederlands of Engels).
+  // Use the working models from your API key (newest first)
+  const modelNames = [
+    'gemini-2.5-flash',           // Stable Gemini 2.5 Flash
+    'gemini-2.0-flash',           // Stable Gemini 2.0 Flash
+  ]
+
+  const prompt = `Analyseer de emotie in de volgende tekst (Nederlands of Engels).
 
 Geef het antwoord in dit JSON formaat (zonder extra tekst):
 {"emotion": "happy|sad|angry|surprised|neutral", "confidence": 0.0-1.0, "reasoning": "korte uitleg"}
@@ -56,25 +46,37 @@ Emoties:
 
 Tekst: "${text}"`
 
-    let lastError = null
-    
-    for (const modelName of modelNames) {
-      try {
-        console.log(`🔍 Trying model: ${modelName}`)
-        const model = genAI.getGenerativeModel({ model: modelName })
-        
-        // Test the model by actually calling generateContent
-        const result = await model.generateContent(prompt)
-        const response = result.response
-        const content = response.text().trim()
-        
+  for (const modelName of modelNames) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`
+      
+      console.log(`🔍 Trying model: ${modelName}`)
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
         console.log(`✅ Working model found: ${modelName}`)
-        console.log('🤖 Gemini SDK Response:', content)
         
-        // Extract and parse the JSON response
+        const content = data.candidates[0].content.parts[0].text.trim()
+        console.log('🤖 Gemini Response:', content)
+        
         const jsonMatch = content.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
-          throw new Error('No valid JSON found in Gemini response')
+          console.log('⚠️ No JSON in response, trying next model...')
+          continue
         }
         
         const parsed = JSON.parse(jsonMatch[0])
@@ -88,19 +90,20 @@ Tekst: "${text}"`
           scores: { [parsed.emotion]: parsed.confidence },
           reasoning: parsed.reasoning
         }
-      } catch (error) {
-        console.log(`❌ Model ${modelName} failed: ${error.message}`)
-        lastError = error
-        continue // Try next model
+      } else {
+        console.log(`❌ Model ${modelName} failed: ${response.status}`)
       }
+    } catch (error) {
+      console.log(`❌ Model ${modelName} error:`, error.message)
     }
-    
-    // If all models failed, throw the last error
-    throw lastError || new Error('All Gemini models failed')
-    
-  } catch (error) {
-    console.error('❌ Gemini SDK error:', error)
-    // Return neutral if the API fails, so the app doesn't crash
-    return { emotion: 'neutral', scores: {}, error: error.message }
   }
+  
+  // All models failed
+  console.error('❌ All Gemini models failed - returning neutral')
+  return { emotion: 'neutral', scores: {}, error: 'All Gemini models unavailable' }
+}
+
+export async function warmUpModel() {
+  console.log('✅ Using Gemini 2.5/2.0 Flash for emotion detection')
+  return true
 }
