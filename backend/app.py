@@ -175,57 +175,15 @@ def _start_tailscale_service_windows() -> None:
         print(f"[WARN] Unable to start/login Tailscale: {e}")
 
 
-def _parse_funnel_url_from_status_text(text: str) -> Optional[str]:
+def _configure_tailscale_funnel() -> None:
     """
-    Parse the public https URL from `tailscale funnel status` output.
-    """
-    if not text:
-        return None
+    Configure Tailscale Funnel so that:
 
-    for line in text.splitlines():
-        s = line.strip()
-        if s.startswith("https://") and ".ts.net" in s:
-            return s.split()[0]
-    return None
-
-
-def _get_funnel_url() -> Optional[str]:
-    """
-    Return the current Funnel URL if Funnel is active on this node.
+      - https://<name>.ts.net/        -> http://localhost:5173
+      - https://<name>.ts.net/backend -> http://localhost:3000
     """
     try:
-        # Prefer JSON output
-        j = subprocess.run(
-            ["tailscale", "funnel", "status", "--json"],
-            capture_output=True,
-            text=True,
-        )
-        if j.returncode == 0 and j.stdout.strip():
-            try:
-                data = json.loads(j.stdout)
-                txt = json.dumps(data)
-                return _parse_funnel_url_from_status_text(txt.replace("\\n", "\n"))
-            except Exception:
-                pass
-
-        # Fallback: plain text
-        t = subprocess.run(
-            ["tailscale", "funnel", "status"],
-            capture_output=True,
-            text=True,
-        )
-        if t.returncode == 0:
-            return _parse_funnel_url_from_status_text(t.stdout)
-    except Exception:
-        pass
-    return None
-
-
-def _enable_tailscale_funnel(port: int) -> None:
-    """
-    Enable Tailscale Funnel for a local HTTP server on 127.0.0.1:<port>.
-    """
-    try:
+        # 1) Reset any previous funnel config (idempotent)
         subprocess.run(
             ["tailscale", "funnel", "reset"],
             check=False,
@@ -233,45 +191,71 @@ def _enable_tailscale_funnel(port: int) -> None:
             stderr=subprocess.DEVNULL,
         )
 
-        cmd = ["tailscale", "funnel", "--bg", str(port)]
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        if res.returncode != 0:
-            print(f"[WARN] `{' '.join(cmd)}` failed: {res.stderr.strip() or res.stdout.strip()}")
-            # Fallback to explicit HTTPS mapping
-            res2 = subprocess.run(
-                ["tailscale", "funnel", "--bg", "--https=443", f"localhost:{port}"],
-                capture_output=True,
-                text=True,
+        # 2) Root path /  -> localhost:5173 (前端)
+        cmd_root = [
+            "tailscale",
+            "funnel",
+            "--bg",
+            "--https=443",
+            "localhost:5173",
+        ]
+        res_root = subprocess.run(cmd_root, capture_output=True, text=True)
+        if res_root.returncode != 0:
+            print(
+                f"[WARN] `{' '.join(cmd_root)}` failed: "
+                f"{res_root.stderr.strip() or res_root.stdout.strip()}"
             )
-            if res2.returncode != 0:
-                print(
-                    "[WARN] Fallback `tailscale funnel --https=443 localhost:{port}` failed: "
-                    f"{res2.stderr.strip() or res2.stdout.strip()}"
-                )
 
-        url = _get_funnel_url()
-        if url:
-            print(f"[INFO] Funnel available: {url}")
-            print(f"[INFO] Mapping: {url} -> http://127.0.0.1:{port}")
+        # 3) /backend -> localhost:3000 (后端 API)
+        cmd_backend = [
+            "tailscale",
+            "funnel",
+            "--bg",
+            "--https=443",
+            "--set-path=/backend",
+            "localhost:3000",
+        ]
+        res_backend = subprocess.run(cmd_backend, capture_output=True, text=True)
+        if res_backend.returncode != 0:
+            print(
+                f"[WARN] `{' '.join(cmd_backend)}` failed: "
+                f"{res_backend.stderr.strip() or res_backend.stdout.strip()}"
+            )
+
+        # 4) Show funnel status for debugging
+        f_status = subprocess.run(
+            ["tailscale", "funnel", "status"],
+            capture_output=True,
+            text=True,
+        )
+        if f_status.returncode == 0:
+            print("[INFO] Tailscale funnel status:\n" + f_status.stdout)
         else:
-            print("[WARN] Could not detect Funnel URL. Run `tailscale funnel status` to view it.")
+            print(
+                "[WARN] `tailscale funnel status` failed: "
+                f"{f_status.stderr.strip() or f_status.stdout.strip()}"
+            )
+
     except FileNotFoundError:
         print("[WARN] `tailscale` CLI not found. Please install Tailscale and ensure it's in PATH.")
     except Exception as e:
-        print(f"[WARN] Could not enable Tailscale Funnel: {e}")
+        print(f"[WARN] Could not configure Tailscale Funnel: {e}")
+
 
 
 def ensure_funnel_if_enabled() -> None:
     """
     Called on startup and __main__:
       - Start Tailscale service on Windows; login via .tailscale auth key if needed.
-      - If ENABLE_TAILSCALE_FUNNEL=1, enable Funnel for TAILSCALE_FUNNEL_PORT.
+      - If ENABLE_TAILSCALE_FUNNEL=1, configure Funnel so that:
+            /        -> http://127.0.0.1:5173
+            /backend -> http://127.0.0.1:3000
     """
     if not ENABLE_TAILSCALE_FUNNEL:
         return
 
     _start_tailscale_service_windows()
-    _enable_tailscale_funnel(TAILSCALE_FUNNEL_PORT)
+    _configure_tailscale_funnel()
 
 
 # -------------------- Middleware (debug logging) --------------------
