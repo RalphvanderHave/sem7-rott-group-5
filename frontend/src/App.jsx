@@ -8,18 +8,25 @@ const STORAGE_KEY = 'alfred_username'
 
 function App() {
   const [isConnected, setIsConnected] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)   // ✅ speaking state
   const [status, setStatus] = useState('disconnected')
   const [messages, setMessages] = useState([])
   const [volume, setVolume] = useState(0)
   const [emotion, setEmotion] = useState('neutral')
 
-  // user
+  // user auth
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [authError, setAuthError] = useState('')
   const [isRegisterMode, setIsRegisterMode] = useState(false)
+
+  // clear memory dialog
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [clearUsername, setClearUsername] = useState('')
+  const [clearPassword, setClearPassword] = useState('')
+  const [clearError, setClearError] = useState('')
+  const [isClearing, setIsClearing] = useState(false)
 
   const conversationRef = useRef(null)
   const audioContextRef = useRef(null)
@@ -32,6 +39,7 @@ function App() {
   const AGENT_ID = import.meta.env.VITE_AGENT_ID
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || 'https://lt-001434231557.tailb2509f.ts.net'
+  const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN
 
   // cleanup on unmount
   useEffect(() => {
@@ -51,7 +59,7 @@ function App() {
     }
   }, [])
 
-  // 自动从 localStorage 读取用户名并登录
+  // Automatically read the username from localStorage and log in.
   useEffect(() => {
     const storedUsername = localStorage.getItem(STORAGE_KEY)
     if (storedUsername) {
@@ -138,10 +146,10 @@ function App() {
 
       if (!res.ok) throw new Error(data.detail || 'Auth failed')
 
-      // 后端目前返回 userId，把它统一映射到 username
+      // The backend currently returns userId, which is uniformly mapped to username.
       const returnedName = (data.username || data.userId || username).toLowerCase()
 
-      // ✅ 持久化保存用户名
+      // ✅ Persistently save username
       localStorage.setItem(STORAGE_KEY, returnedName)
 
       setIsLoggedIn(true)
@@ -171,6 +179,7 @@ function App() {
     setIsLoggedIn(false)
     setPassword('')
     setAuthError('')
+    setIsSpeaking(false)   // ✅ Make sure to turn off the speaking state when logging out.
     setMessages(prev => [
       ...prev,
       {
@@ -179,6 +188,79 @@ function App() {
         timestamp: Date.now(),
       },
     ])
+  }
+
+  // Open the "Clear Memory" dialog box
+  const openClearDialog = () => {
+    setClearUsername(username || '')
+    setClearPassword('')
+    setClearError('')
+    setShowClearDialog(true)
+  }
+
+  // Confirm memory clearing
+  const handleConfirmClear = async () => {
+    setClearError('')
+
+    if (!clearUsername || !clearPassword) {
+      setClearError('Vul gebruikersnaam en wachtwoord in.')
+      return
+    }
+
+    if (!AUTH_TOKEN) {
+      setClearError('AUTH_TOKEN is niet geconfigureerd aan de frontend.')
+      return
+    }
+
+    setIsClearing(true)
+
+    try {
+      // 1) First, use /login to verify username + password.
+      const loginRes = await fetch(`${BACKEND_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: clearUsername,
+          password: clearPassword,
+        }),
+      })
+
+      const loginData = await loginRes.json().catch(() => ({}))
+      if (!loginRes.ok) {
+        throw new Error(loginData.detail || 'Login failed')
+      }
+
+      const lowerName = (clearUsername || '').trim().toLowerCase()
+
+      // 2) After the password is correct, call /mem0/clear.
+      const clearRes = await fetch(`${BACKEND_URL}/mem0/clear`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+        body: JSON.stringify({ userId: lowerName }),
+      })
+
+      const clearData = await clearRes.json().catch(() => ({}))
+      if (!clearRes.ok) {
+        throw new Error(clearData.detail || 'Failed to clear memory')
+      }
+
+      setShowClearDialog(false)
+      setClearPassword('')
+      setClearError('')
+
+      addMessage(
+        'system',
+        `🧹 Alle herinneringen voor ${lowerName} zijn gewist.`,
+      )
+    } catch (err) {
+      console.error('❌ Clear memory error:', err)
+      setClearError(err.message || 'Onbekende fout bij geheugen wissen.')
+    } finally {
+      setIsClearing(false)
+    }
   }
 
   // ⭐ start conversation
@@ -211,6 +293,7 @@ function App() {
       }
 
       setStatus('connecting')
+      setIsSpeaking(false)     // ✅ Reset speaking before starting the connection
       addMessage('system', '🔄 Connecting to AI agent Alfred...')
 
       console.log('🎯 Using Agent ID:', AGENT_ID)
@@ -239,9 +322,9 @@ function App() {
       const conversation = await Conversation.startSession({
         agentId: AGENT_ID,
         apiKey: API_KEY,
+        connectionType: 'webrtc',   // 建议显式写出连接类型（如有需要）
 
-        // 🔑 把用户名作为 dynamic variable 传给 ElevenLabs
-        // 这样 conversation_initiation_client_data 会包含 { type, username: "xxx" }
+        // 🔑 Pass the username as a dynamic variable to ElevenLabs
         dynamicVariables: {
           username: username || 'guest',
         },
@@ -251,6 +334,7 @@ function App() {
           setIsConnected(true)
           setStatus('connected')
           setEmotion('neutral')
+          setIsSpeaking(false)
           addMessage('system', '✅ Connected!')
         },
 
@@ -264,6 +348,7 @@ function App() {
           setStatus('disconnected')
           setVolume(0)
           setEmotion('sad')
+          setIsSpeaking(false)   // ✅ Turn off speaking when disconnecting
 
           if (
             reason?.message?.includes('quota') ||
@@ -289,10 +374,19 @@ function App() {
           console.error('Error details:', JSON.stringify(error, null, 2))
           setStatus('error')
           setEmotion('sad')
+          setIsSpeaking(false)
           addMessage(
             'system',
             `⚠️ Error: ${error.message || 'Unknown error occurred'}`,
           )
+        },
+
+        // ⬇️⬇️ Key: Switch between speaking, listening, and thinking modes according to the mode.
+        onModeChange: mode => {
+          // mode 'speaking' | 'listening' | 'thinking'
+          console.log('🎛 Mode changed:', mode)
+          setStatus(mode)
+          setIsSpeaking(mode === 'speaking')
         },
 
         onMessage: event => {
@@ -331,6 +425,7 @@ function App() {
       setStatus('error')
       setIsConnected(false)
       setEmotion('sad')
+      setIsSpeaking(false)
 
       let errorMessage = error.message
       if (error.message.includes('API key')) {
@@ -365,6 +460,7 @@ function App() {
       setStatus('disconnected')
       setVolume(0)
       setEmotion('neutral')
+      setIsSpeaking(false)    // ✅ Turn off speaking when you actively end the session.
       addMessage('system', '👋 Conversation ended')
     }
 
@@ -418,6 +514,12 @@ function App() {
                 >
                   Logout
                 </button>
+                <button
+                  className="auth-button danger"
+                  onClick={openClearDialog}
+                >
+                  🧹 Clear memory
+                </button>
               </div>
             ) : (
               <div className="auth-form">
@@ -450,6 +552,47 @@ function App() {
         </header>
 
         {authError && <div className="auth-error">⚠️ {authError}</div>}
+
+        {/* Clear memory dialog box */}
+        {showClearDialog && (
+          <div className="clear-dialog">
+            <h3>🧹 Herinneringen wissen</h3>
+            <p>Bevestig met gebruikersnaam en wachtwoord.</p>
+            <input
+              type="text"
+              placeholder="Username"
+              value={clearUsername}
+              onChange={e => setClearUsername(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={clearPassword}
+              onChange={e => setClearPassword(e.target.value)}
+            />
+            {clearError && (
+              <div className="auth-error" style={{ marginTop: '8px' }}>
+                ⚠️ {clearError}
+              </div>
+            )}
+            <div className="clear-dialog-actions">
+              <button
+                className="auth-button danger"
+                onClick={handleConfirmClear}
+                disabled={isClearing}
+              >
+                {isClearing ? 'Wissen...' : 'Bevestigen'}
+              </button>
+              <button
+                className="auth-button"
+                onClick={() => setShowClearDialog(false)}
+                disabled={isClearing}
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="avatar-section">
           <Avatar
