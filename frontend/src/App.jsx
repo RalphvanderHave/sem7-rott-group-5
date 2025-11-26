@@ -4,6 +4,8 @@ import Avatar from './Avatar'
 import { analyzeEmotionWithGemini } from './services/emotionAnalysis'
 import './App.css'
 
+const STORAGE_KEY = 'alfred_username'
+
 function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -46,6 +48,23 @@ function App() {
       if (emotionTimeoutRef.current) {
         clearTimeout(emotionTimeoutRef.current)
       }
+    }
+  }, [])
+
+  // 自动从 localStorage 读取用户名并登录
+  useEffect(() => {
+    const storedUsername = localStorage.getItem(STORAGE_KEY)
+    if (storedUsername) {
+      setUsername(storedUsername)
+      setIsLoggedIn(true)
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'system',
+          content: `🔓 Automatisch ingelogd als ${storedUsername}`,
+          timestamp: Date.now(),
+        },
+      ])
     }
   }, [])
 
@@ -122,18 +141,21 @@ function App() {
       // 后端目前返回 userId，把它统一映射到 username
       const returnedName = (data.username || data.userId || username).toLowerCase()
 
+      // ✅ 持久化保存用户名
+      localStorage.setItem(STORAGE_KEY, returnedName)
+
       setIsLoggedIn(true)
       setUsername(returnedName)
       setPassword('')
       setAuthError('')
 
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         {
           role: 'system',
           content: isRegisterMode
-            ? `✅ Geregistreerd en ingelogd als ${data.userId}`
-            : `✅ Ingelogd als ${data.userId}`,
+            ? `✅ Geregistreerd en ingelogd als ${returnedName}`
+            : `✅ Ingelogd als ${returnedName}`,
           timestamp: Date.now(),
         },
       ])
@@ -145,6 +167,7 @@ function App() {
   }
 
   const handleLogout = () => {
+    localStorage.removeItem(STORAGE_KEY)
     setIsLoggedIn(false)
     setPassword('')
     setAuthError('')
@@ -272,7 +295,7 @@ function App() {
           )
         },
 
-        onMessage: (event) => {
+        onMessage: event => {
           if (event?.source === 'user' && event.message) {
             addMessage('user', event.message)
           }
@@ -391,7 +414,7 @@ function App() {
                 <span className="auth-user">👤 {username}</span>
                 <button
                   className="auth-button logout"
-                  onClick={() => setIsLoggedIn(false)}
+                  onClick={handleLogout}
                 >
                   Logout
                 </button>
@@ -402,20 +425,20 @@ function App() {
                   type="text"
                   placeholder="Username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={e => setUsername(e.target.value)}
                 />
                 <input
                   type="password"
                   placeholder="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                 />
                 <button className="auth-button" onClick={handleAuth}>
                   {isRegisterMode ? 'Registreren' : 'Inloggen'}
                 </button>
                 <button
                   className="auth-toggle"
-                  onClick={() => setIsRegisterMode((p) => !p)}
+                  onClick={() => setIsRegisterMode(p => !p)}
                 >
                   {isRegisterMode
                     ? 'Heb je al een account? Inloggen'
