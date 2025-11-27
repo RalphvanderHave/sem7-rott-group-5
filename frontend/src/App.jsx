@@ -37,8 +37,7 @@ function App() {
 
   const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
   const AGENT_ID = import.meta.env.VITE_AGENT_ID
-  const BACKEND_URL =
-    import.meta.env.VITE_BACKEND_URL || 'https://lt-001434231557.tailb2509f.ts.net'
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
   const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN
 
   // cleanup on unmount
@@ -322,7 +321,7 @@ function App() {
       const conversation = await Conversation.startSession({
         agentId: AGENT_ID,
         apiKey: API_KEY,
-        connectionType: 'webrtc',   // 建议显式写出连接类型（如有需要）
+        //connectionType: 'webrtc',
 
         // 🔑 Pass the username as a dynamic variable to ElevenLabs
         dynamicVariables: {
@@ -518,7 +517,7 @@ function App() {
                   className="auth-button danger"
                   onClick={openClearDialog}
                 >
-                  🧹 Clear memory
+                  🧹 Geheugen wissen
                 </button>
               </div>
             ) : (
