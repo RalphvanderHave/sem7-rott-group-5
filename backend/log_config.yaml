@@ -1,0 +1,33 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  with_time:
+    format: "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+
+handlers:
+  file:
+    class: logging.FileHandler
+    filename: "history.log"
+    formatter: with_time
+    level: DEBUG
+
+loggers:
+  uvicorn:
+    handlers: [file]
+    level: DEBUG
+    propagate: False
+
+  uvicorn.error:
+    handlers: [file]
+    level: DEBUG
+    propagate: False
+
+  uvicorn.access:
+    handlers: [file]
+    level: DEBUG
+    propagate: False
+
+root:
+  handlers: [file]
+  level: DEBUG
