@@ -12,6 +12,7 @@
   "dependencies": {
     "@11labs/client": "^0.2.0",
     "@google/generative-ai": "^0.21.0",
+    "prop-types": "^15.8.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
