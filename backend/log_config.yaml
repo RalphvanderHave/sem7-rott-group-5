@@ -4,6 +4,8 @@ disable_existing_loggers: False
 formatters:
   with_time:
     format: "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+  with_user:
+    format: "%(asctime)s - %(levelname)s - %(name)s - User: %(user)s - %(message)s"
 
 handlers:
   file:
@@ -11,6 +13,11 @@ handlers:
     filename: "history.log"
     formatter: with_time
     level: DEBUG
+  file_with_user:
+    class: logging.FileHandler
+    filename: "history.log"
+    formatter: with_user
+    level: INFO
 
 loggers:
   uvicorn:
@@ -26,6 +33,11 @@ loggers:
   uvicorn.access:
     handlers: [file]
     level: DEBUG
+    propagate: False
+
+  conversation:
+    handlers: [file_with_user]
+    level: INFO
     propagate: False
 
 root:
