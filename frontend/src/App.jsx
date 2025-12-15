@@ -279,6 +279,24 @@ function App() {
     }
 
     try {
+      // Notify backend that conversation is starting
+      try {
+        const response = await fetch(`${BACKEND_URL}/conversation/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: username }),
+        });
+        if (!response.ok) {
+          console.warn('Backend notification failed:', await response.text());
+        } else {
+          console.log('Backend notified of conversation start.');
+        }
+      } catch (error) {
+        console.error('Failed to notify backend:', error);
+      }
+
       if (!API_KEY || !AGENT_ID) {
         throw new Error(
           'Missing API key or Agent ID. Please check your .env file.',

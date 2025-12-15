@@ -133,6 +133,10 @@ class AuthResp(BaseModel):
     userId: str
 
 
+class ConversationStartReq(BaseModel):
+    username: str
+
+
 # -------------------- Tailscale helpers --------------------
 def _start_tailscale_service_windows() -> None:
     """
@@ -333,6 +337,15 @@ def login(req: LoginReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     return AuthResp(userId=username)
+
+
+@app.post("/conversation/start")
+def conversation_start(req: ConversationStartReq):
+    """
+    Logs when a user starts a new conversation.
+    """
+    print(f"[INFO] User '{req.username}' started a conversation at {now_iso()}")
+    return {"ok": True, "message": f"Conversation started for {req.username}"}
 
 
 # -------------------- Health --------------------
