@@ -137,6 +137,10 @@ class ConversationStartReq(BaseModel):
     username: str
 
 
+class ConversationEndReq(BaseModel):
+    username: str
+
+
 # -------------------- Tailscale helpers --------------------
 def _start_tailscale_service_windows() -> None:
     """
@@ -346,6 +350,15 @@ def conversation_start(req: ConversationStartReq):
     """
     print(f"[INFO] User '{req.username}' started a conversation at {now_iso()}")
     return {"ok": True, "message": f"Conversation started for {req.username}"}
+
+
+@app.post("/conversation/end")
+def conversation_end(req: ConversationEndReq):
+    """
+    Logs when a user ends a conversation.
+    """
+    print(f"[INFO] User '{req.username}' ended a conversation at {now_iso()}")
+    return {"ok": True, "message": f"Conversation ended for {req.username}"}
 
 
 # -------------------- Health --------------------

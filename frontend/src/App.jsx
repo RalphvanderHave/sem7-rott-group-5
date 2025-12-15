@@ -465,6 +465,24 @@ function App() {
   const endConversation = async () => {
     console.log('🔌 User requested to end conversation')
 
+    // Notify backend that conversation is ending
+    try {
+      const response = await fetch(`${BACKEND_URL}/conversation/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: username }),
+      });
+      if (!response.ok) {
+        console.warn('Backend notification failed:', await response.text());
+      } else {
+        console.log('Backend notified of conversation end.');
+      }
+    } catch (error) {
+      console.error('Failed to notify backend:', error);
+    }
+
     if (conversationRef.current) {
       try {
         await conversationRef.current.endSession()
