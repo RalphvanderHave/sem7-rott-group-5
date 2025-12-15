@@ -5,6 +5,9 @@ import json
 import subprocess
 import time
 from typing import Optional, Dict, Any
+import logging
+import logging.config
+import yaml
 
 from fastapi import FastAPI, Depends, Query, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +35,13 @@ from utils import (
     MEM_MODEL_NAME,
     AUTH_TOKEN,
 )
+
+# -------------------- Logging --------------------
+with open("log_config.yaml", "r") as f:
+    log_config = yaml.safe_load(f)
+    logging.config.dictConfig(log_config)
+
+conversation_logger = logging.getLogger("conversation")
 
 # -------------------- Environment --------------------
 PORT = int(os.getenv("PORT", "3000"))
@@ -348,7 +358,7 @@ def conversation_start(req: ConversationStartReq):
     """
     Logs when a user starts a new conversation.
     """
-    print(f"[INFO] User '{req.username}' started a conversation at {now_iso()}")
+    conversation_logger.info("Conversation started", extra={"user": req.username})
     return {"ok": True, "message": f"Conversation started for {req.username}"}
 
 
@@ -357,7 +367,7 @@ def conversation_end(req: ConversationEndReq):
     """
     Logs when a user ends a conversation.
     """
-    print(f"[INFO] User '{req.username}' ended a conversation at {now_iso()}")
+    conversation_logger.info("Conversation ended", extra={"user": req.username})
     return {"ok": True, "message": f"Conversation ended for {req.username}"}
 
 
