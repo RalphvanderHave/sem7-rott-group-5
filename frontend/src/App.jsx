@@ -21,11 +21,6 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [isRegisterMode, setIsRegisterMode] = useState(false)
 
-  // 🧪 Test mode state
-  const [showTestPanel, setShowTestPanel] = useState(false)
-  const [testIsSpeaking, setTestIsSpeaking] = useState(false)
-  const [testVolume, setTestVolume] = useState(0)
-
   // clear memory dialog
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [clearUsername, setClearUsername] = useState('')
@@ -514,42 +509,6 @@ function App() {
     }
   }
 
-  // 🧪 Test functions
-  const cycleEmotion = () => {
-    const emotions = ['neutral', 'happy', 'sad', 'angry', 'surprised', 'confused']
-    const currentIndex = emotions.indexOf(emotion)
-    const nextEmotion = emotions[(currentIndex + 1) % emotions.length]
-    setEmotion(nextEmotion)
-    addMessage('system', `🎭 Test: Emotion changed to ${nextEmotion}`)
-  }
-
-  const toggleTestSpeaking = () => {
-    setTestIsSpeaking(!testIsSpeaking)
-    setIsSpeaking(!testIsSpeaking)
-    if (!testIsSpeaking) {
-      // Simulate volume when speaking
-      const volumeInterval = setInterval(() => {
-        setTestVolume(Math.random() * 100)
-      }, 100)
-      setTimeout(() => {
-        clearInterval(volumeInterval)
-        setTestVolume(0)
-        setTestIsSpeaking(false)
-        setIsSpeaking(false)
-      }, 3000)
-    }
-  }
-
-  const testAllEmotions = async () => {
-    const emotions = ['neutral', 'happy', 'sad', 'angry', 'surprised', 'confused']
-    for (const emo of emotions) {
-      setEmotion(emo)
-      addMessage('system', `🎭 Testing: ${emo}`)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-    }
-    setEmotion('neutral')
-  }
-
   const getStatusDisplay = () => {
     switch (status) {
       case 'connecting':
@@ -666,84 +625,6 @@ function App() {
               >
                 Annuleren
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* 🧪 Test Panel */}
-        <div className="test-panel-toggle">
-          <button 
-            className="test-toggle-btn"
-            onClick={() => setShowTestPanel(!showTestPanel)}
-          >
-            {showTestPanel ? '🔬 Hide Tests' : '🔬 Show Tests'}
-          </button>
-        </div>
-
-        {showTestPanel && (
-          <div className="test-panel">
-            <h3>🧪 Avatar Test Controls</h3>
-            <div className="test-controls">
-              <button onClick={cycleEmotion} className="test-btn">
-                🎭 Cycle Emotion
-              </button>
-              <button onClick={toggleTestSpeaking} className="test-btn">
-                {testIsSpeaking ? '🔇 Stop Speaking' : '🗣️ Test Speaking'}
-              </button>
-              <button onClick={testAllEmotions} className="test-btn">
-                🎬 Test All Emotions
-              </button>
-              <button 
-                onClick={() => {
-                  setEmotion('happy')
-                  addMessage('user', 'I love this!')
-                }} 
-                className="test-btn"
-              >
-                😊 Happy Test
-              </button>
-              <button 
-                onClick={() => {
-                  setEmotion('sad')
-                  addMessage('user', 'I am feeling down...')
-                }} 
-                className="test-btn"
-              >
-                😢 Sad Test
-              </button>
-              <button 
-                onClick={() => {
-                  setEmotion('angry')
-                  addMessage('user', 'This is frustrating!')
-                }} 
-                className="test-btn"
-              >
-                😠 Angry Test
-              </button>
-              <button 
-                onClick={() => {
-                  setEmotion('surprised')
-                  addMessage('user', 'Wow! Really?')
-                }} 
-                className="test-btn"
-              >
-                😲 Surprised Test
-              </button>
-              <button 
-                onClick={() => {
-                  setEmotion('confused')
-                  addMessage('user', 'I don\'t understand...')
-                }} 
-                className="test-btn"
-              >
-                😕 Confused Test
-              </button>
-            </div>
-            <div className="test-info">
-              <p>Current Emotion: <strong>{emotion}</strong></p>
-              <p>Is Speaking: <strong>{isSpeaking ? 'Yes' : 'No'}</strong></p>
-              <p>Volume: <strong>{Math.round(testIsSpeaking ? testVolume : volume)}</strong></p>
-              <p>Connected: <strong>{isConnected ? 'Yes' : 'No'}</strong></p>
             </div>
           </div>
         )}
