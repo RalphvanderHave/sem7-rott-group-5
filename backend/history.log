@@ -1,0 +1,209 @@
+2025-12-15 10:39:46,375 - INFO - uvicorn.error - Will watch for changes in these directories: ['C:\\Users\\Notebook\\Downloads\\code\\sem7-rott-group-5\\backend']
+2025-12-15 10:39:46,376 - INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2025-12-15 10:39:46,376 - INFO - uvicorn.error - Started reloader process [11548] using StatReload
+2025-12-15 10:39:46,641 - DEBUG - asyncio - Using selector: SelectSelector
+2025-12-15 10:39:58,625 - INFO - uvicorn.error - Started server process [6984]
+2025-12-15 10:39:58,625 - INFO - uvicorn.error - Waiting for application startup.
+2025-12-15 10:39:58,625 - INFO - sentence_transformers.SentenceTransformer - Use pytorch device_name: cpu
+2025-12-15 10:39:58,625 - INFO - sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-12-15 10:39:58,641 - DEBUG - urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443
+2025-12-15 10:39:59,304 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2025-12-15 10:39:59,336 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2025-12-15 10:39:59,458 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2025-12-15 10:39:59,474 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-12-15 10:39:59,594 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2025-12-15 10:39:59,610 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-12-15 10:39:59,735 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md HTTP/1.1" 307 0
+2025-12-15 10:39:59,751 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md HTTP/1.1" 200 0
+2025-12-15 10:39:59,860 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2025-12-15 10:39:59,891 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2025-12-15 10:40:00,001 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/1.1" 307 0
+2025-12-15 10:40:00,048 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json HTTP/1.1" 200 0
+2025-12-15 10:40:00,157 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2025-12-15 10:40:00,282 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json HTTP/1.1" 307 0
+2025-12-15 10:40:00,313 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json HTTP/1.1" 200 0
+2025-12-15 10:40:00,578 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/1.1" 307 0
+2025-12-15 10:40:00,594 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json HTTP/1.1" 200 0
+2025-12-15 10:40:00,719 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 64
+2025-12-15 10:40:00,841 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=True&expand=False HTTP/1.1" 200 6465
+2025-12-15 10:40:01,013 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json HTTP/1.1" 307 0
+2025-12-15 10:40:01,028 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json HTTP/1.1" 200 0
+2025-12-15 10:40:01,169 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2 HTTP/1.1" 200 6835
+2025-12-15 10:40:02,972 - INFO - uvicorn.error - Application startup complete.
+2025-12-15 10:40:25,179 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /login HTTP/1.1" 200
+2025-12-15 10:40:32,138 - INFO - conversation - User: sky - Conversation started
+2025-12-15 10:40:32,140 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-15 10:40:42,140 - INFO - conversation - User: sky - Conversation ended
+2025-12-15 10:40:42,143 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-15 10:41:18,868 - INFO - conversation - User: sky - Conversation started
+2025-12-15 10:41:18,868 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-15 10:41:25,493 - INFO - conversation - User: sky - Conversation ended
+2025-12-15 10:41:25,494 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-15 10:41:57,056 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /login HTTP/1.1" 200
+2025-12-15 10:42:03,312 - INFO - conversation - User: sky - Conversation started
+2025-12-15 10:42:03,312 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-15 10:42:09,814 - INFO - conversation - User: sky - Conversation ended
+2025-12-15 10:42:09,814 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-16 01:58:27,048 - INFO - conversation - User: hani - Conversation started
+2025-12-16 01:58:27,048 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-16 02:08:47,124 - INFO - conversation - User: hani - Conversation started
+2025-12-16 02:08:47,124 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-16 02:08:55,757 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-16 02:09:20,322 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2025-12-16 02:12:24,590 - INFO - conversation - User: hani - Conversation ended
+2025-12-16 02:12:24,590 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-16 02:12:26,559 - INFO - conversation - User: hani - Conversation started
+2025-12-16 02:12:26,559 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-16 02:12:32,918 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-16 02:12:42,982 - INFO - conversation - User: hani - Conversation ended
+2025-12-16 02:12:42,982 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-16 02:12:44,054 - INFO - conversation - User: hani - Conversation started
+2025-12-16 02:12:44,054 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-16 02:12:45,937 - INFO - conversation - User: hani - Conversation ended
+2025-12-16 02:12:45,937 - INFO - uvicorn.access - 84.106.110.30:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-16 20:24:20,591 - INFO - uvicorn.access - 100.96.3.34:0 - "GET /mem0/search HTTP/1.1" 405
+2025-12-16 20:25:02,795 - INFO - uvicorn.access - 100.96.3.34:0 - "GET /mem0/auto HTTP/1.1" 405
+2025-12-16 20:25:08,420 - INFO - uvicorn.access - 100.96.3.34:0 - "GET /mem0/add HTTP/1.1" 405
+2025-12-17 13:15:38,890 - INFO - uvicorn.access - 2001:1c00:1e08:4700:8849:a4fc:18d8:3230:0 - "POST /register HTTP/1.1" 200
+2025-12-17 13:15:42,387 - INFO - conversation - User: joris - Conversation started
+2025-12-17 13:15:42,387 - INFO - uvicorn.access - 2001:1c00:1e08:4700:8849:a4fc:18d8:3230:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-17 13:16:06,863 - INFO - conversation - User: joris - Conversation ended
+2025-12-17 13:16:06,863 - INFO - uvicorn.access - 2001:1c00:1e08:4700:8849:a4fc:18d8:3230:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:22:14,906 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /register HTTP/1.1" 200
+2025-12-18 18:22:28,013 - INFO - conversation - User: groep1user1 - Conversation started
+2025-12-18 18:22:28,013 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:23:50,134 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:23:50,134 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:23:52,493 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:23:52,493 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:23:53,286 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:23:53,286 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:24:20,840 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:24:20,840 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:24:20,840 - INFO - conversation - User: groep1user1 - Conversation ended
+2025-12-18 18:24:20,840 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:24:20,853 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:24:20,861 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:24:58,142 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /register HTTP/1.1" 200
+2025-12-18 18:25:00,218 - INFO - conversation - User: maik - Conversation started
+2025-12-18 18:25:00,218 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:25:00,967 - INFO - conversation - User: groep1user1 - Conversation started
+2025-12-18 18:25:00,967 - INFO - uvicorn.access - 2a02:a420:238:bddd:dda2:a514:6a7a:85eb:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:26:39,209 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 18:26:39,209 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:26:40,891 - INFO - conversation - User: maik - Conversation started
+2025-12-18 18:26:40,891 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:26:43,580 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 18:26:43,580 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:33:20,101 - INFO - conversation - User: maik - Conversation started
+2025-12-18 18:33:20,101 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:33:59,353 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 18:33:59,353 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:45:45,346 - INFO - conversation - User: maik - Conversation started
+2025-12-18 18:45:45,346 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:46:20,710 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 18:46:20,710 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 18:48:47,594 - INFO - conversation - User: maik - Conversation started
+2025-12-18 18:48:47,594 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 18:48:54,915 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2025-12-18 18:49:35,601 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 18:49:35,601 - INFO - uvicorn.access - 145.52.156.241:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-18 19:49:21,991 - INFO - conversation - User: maik - Conversation started
+2025-12-18 19:49:21,991 - INFO - uvicorn.access - 95.99.44.234:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-18 19:49:49,490 - INFO - conversation - User: maik - Conversation ended
+2025-12-18 19:49:49,490 - INFO - uvicorn.access - 95.99.44.234:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-19 20:39:50,337 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /register HTTP/1.1" 200
+2025-12-19 20:39:57,675 - INFO - conversation - User: m.kbn - Conversation started
+2025-12-19 20:39:57,675 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-19 20:40:09,788 - INFO - conversation - User: m.kbn - Conversation ended
+2025-12-19 20:40:09,788 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 02:13:06,615 - INFO - conversation - User: m.kbn - Conversation started
+2025-12-20 02:13:06,615 - INFO - uvicorn.access - 178.230.100.169:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 02:16:53,176 - INFO - conversation - User: m.kbn - Conversation ended
+2025-12-20 02:16:53,176 - INFO - uvicorn.access - 178.230.100.169:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 02:19:13,170 - INFO - conversation - User: m.kbn - Conversation started
+2025-12-20 02:19:13,170 - INFO - uvicorn.access - 178.230.100.169:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 02:19:22,213 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-20 02:19:51,094 - INFO - conversation - User: m.kbn - Conversation ended
+2025-12-20 02:19:51,094 - INFO - uvicorn.access - 178.230.100.169:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 10:09:02,595 - INFO - uvicorn.error - Shutting down
+2025-12-20 10:09:02,706 - INFO - uvicorn.error - Waiting for application shutdown.
+2025-12-20 10:09:02,722 - INFO - uvicorn.error - Application shutdown complete.
+2025-12-20 10:09:02,742 - INFO - uvicorn.error - Finished server process [6984]
+2025-12-20 10:09:05,116 - INFO - uvicorn.error - Stopping reloader process [11548]
+2025-12-20 10:10:32,628 - INFO - uvicorn.error - Will watch for changes in these directories: ['C:\\Users\\Notebook\\Downloads\\code\\sem7-rott-group-5\\backend']
+2025-12-20 10:10:32,628 - INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2025-12-20 10:10:32,628 - INFO - uvicorn.error - Started reloader process [3780] using StatReload
+2025-12-20 10:10:32,912 - DEBUG - asyncio - Using selector: SelectSelector
+2025-12-20 10:11:38,608 - INFO - uvicorn.error - Started server process [16788]
+2025-12-20 10:11:38,608 - INFO - uvicorn.error - Waiting for application startup.
+2025-12-20 10:11:38,629 - INFO - sentence_transformers.SentenceTransformer - Use pytorch device_name: cpu
+2025-12-20 10:11:38,629 - INFO - sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-12-20 10:11:38,660 - DEBUG - urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443
+2025-12-20 10:11:39,457 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2025-12-20 10:11:39,473 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2025-12-20 10:11:39,606 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2025-12-20 10:11:39,621 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-12-20 10:11:39,778 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2025-12-20 10:11:39,794 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-12-20 10:11:39,934 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md HTTP/1.1" 307 0
+2025-12-20 10:11:39,951 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md HTTP/1.1" 200 0
+2025-12-20 10:11:40,130 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2025-12-20 10:11:40,154 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2025-12-20 10:11:40,326 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/1.1" 307 0
+2025-12-20 10:11:40,402 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json HTTP/1.1" 200 0
+2025-12-20 10:11:40,560 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2025-12-20 10:11:40,691 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json HTTP/1.1" 307 0
+2025-12-20 10:11:40,729 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json HTTP/1.1" 200 0
+2025-12-20 10:11:41,424 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/1.1" 307 0
+2025-12-20 10:11:41,465 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json HTTP/1.1" 200 0
+2025-12-20 10:11:41,659 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 64
+2025-12-20 10:11:41,784 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=True&expand=False HTTP/1.1" 200 6465
+2025-12-20 10:11:42,132 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json HTTP/1.1" 307 0
+2025-12-20 10:11:42,156 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json HTTP/1.1" 200 0
+2025-12-20 10:11:42,402 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2 HTTP/1.1" 200 6842
+2025-12-20 10:11:45,798 - INFO - uvicorn.error - Application startup complete.
+2025-12-20 10:11:49,660 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /login HTTP/1.1" 200
+2025-12-20 10:11:49,740 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /login HTTP/1.1" 200
+2025-12-20 10:12:28,092 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /login HTTP/1.1" 200
+2025-12-20 10:12:30,910 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/start HTTP/1.1" 200
+2025-12-20 10:12:30,927 - INFO - conversation - User: sky - Conversation started
+2025-12-20 10:12:30,932 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 10:12:48,596 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2025-12-20 10:13:04,851 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2025-12-20 10:14:11,421 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2025-12-20 10:14:19,598 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/end HTTP/1.1" 200
+2025-12-20 10:14:19,608 - INFO - conversation - User: sky - Conversation ended
+2025-12-20 10:14:19,609 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 10:14:37,749 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /login HTTP/1.1" 200
+2025-12-20 10:17:36,194 - INFO - conversation - User: sky - Conversation started
+2025-12-20 10:17:36,195 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 10:17:46,902 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-20 10:18:30,670 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2025-12-20 10:18:40,312 - INFO - conversation - User: sky - Conversation ended
+2025-12-20 10:18:40,312 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 10:21:51,271 - INFO - uvicorn.access - 178.230.17.162:0 - "POST /register HTTP/1.1" 200
+2025-12-20 10:21:54,821 - INFO - conversation - User: jiawei - Conversation started
+2025-12-20 10:21:54,826 - INFO - uvicorn.access - 178.230.17.162:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 10:22:08,836 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+    2025-12-20 10:23:14,943 - INFO - conversation - User: jiawei - Conversation ended
+2025-12-20 10:23:14,943 - INFO - uvicorn.access - 178.230.17.162:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-20 10:24:49,835 - INFO - conversation - User: jiawei - Conversation started
+2025-12-20 10:24:49,835 - INFO - uvicorn.access - 178.230.17.162:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-20 10:24:58,844 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-20 10:26:06,992 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-20 10:27:05,948 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2025-12-20 10:27:35,931 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2025-12-20 10:27:48,737 - INFO - conversation - User: jiawei - Conversation ended
+2025-12-20 10:27:48,738 - INFO - uvicorn.access - 178.230.17.162:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-25 20:12:41,023 - INFO - uvicorn.access - 2a09:bac3:4d84:2705::3e3:15:0 - "POST /register HTTP/1.1" 200
+2025-12-26 08:58:32,417 - INFO - conversation - User: gksl.krkz - Conversation started
+2025-12-26 08:58:32,421 - INFO - uvicorn.access - 2a02:26f7:f98c:4a40:0:4800:0:13:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-26 08:58:43,491 - INFO - conversation - User: gksl.krkz - Conversation started
+2025-12-26 08:58:43,492 - INFO - uvicorn.access - 2a02:26f7:f98c:4a40:0:4800:0:13:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-26 08:59:29,293 - INFO - conversation - User: gksl.krkz - Conversation started
+2025-12-26 08:59:29,294 - INFO - uvicorn.access - 2a02:26f7:f98c:4a40:0:2000:0:17:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-26 09:01:02,485 - INFO - conversation - User: gksl.krkz - Conversation started
+2025-12-26 09:01:02,486 - INFO - uvicorn.access - 2a02:26f7:f980:4a40:0:3000:0:2:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-26 09:07:50,527 - INFO - conversation - User: gksl.krkz - Conversation ended
+2025-12-26 09:07:50,528 - INFO - uvicorn.access - 2a02:26f7:f980:4a40:0:3000:0:2:0 - "POST /conversation/end HTTP/1.1" 200
