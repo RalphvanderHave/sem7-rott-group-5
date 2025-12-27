@@ -9,7 +9,7 @@ export default defineConfig({
     host: true,
     port: 5173,
     allowedHosts: [
-      "lt-001434231557.tailb2509f.ts.net"
+      "desktop-gl4mk9o.tailb2509f.ts.net"
     ]
   }
 })
