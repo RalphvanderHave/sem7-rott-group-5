@@ -221,3 +221,17 @@
 2025-12-27 16:40:11,452 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/end HTTP/1.1" 200
 2025-12-27 16:40:11,485 - INFO - conversation - User: sky - Conversation ended
 2025-12-27 16:40:11,487 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-27 16:39:48,247 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/start HTTP/1.1" 200
+2025-12-27 16:39:48,256 - INFO - conversation - User: sky - Conversation started
+2025-12-27 16:39:48,256 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-27 16:39:57,944 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-27 16:40:11,452 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/end HTTP/1.1" 200
+2025-12-27 16:40:11,485 - INFO - conversation - User: sky - Conversation ended
+2025-12-27 16:40:11,487 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-27 16:39:48,247 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/start HTTP/1.1" 200
+2025-12-27 16:39:48,256 - INFO - conversation - User: sky - Conversation started
+2025-12-27 16:39:48,256 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-27 16:39:57,944 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-27 16:40:11,452 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/end HTTP/1.1" 200
+2025-12-27 16:40:11,485 - INFO - conversation - User: sky - Conversation ended
+2025-12-27 16:40:11,487 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
