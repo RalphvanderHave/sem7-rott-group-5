@@ -235,3 +235,23 @@
 2025-12-27 16:40:11,452 - INFO - uvicorn.access - 100.111.92.87:0 - "OPTIONS /conversation/end HTTP/1.1" 200
 2025-12-27 16:40:11,485 - INFO - conversation - User: sky - Conversation ended
 2025-12-27 16:40:11,487 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2025-12-27 16:46:56,582 - INFO - conversation - User: sky - Conversation started
+2025-12-27 16:46:56,588 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/start HTTP/1.1" 200
+2025-12-27 16:47:18,881 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2025-12-27 16:49:29,704 - INFO - conversation - User: sky - Conversation ended
+2025-12-27 16:49:29,705 - INFO - uvicorn.access - 100.111.92.87:0 - "POST /conversation/end HTTP/1.1" 200
+2026-01-04 16:16:49,812 - INFO - uvicorn.access - 2a06:61c1:c558:4000:7128:b31a:33ce:e358:0 - "POST /login HTTP/1.1" 401
+2026-01-04 16:17:08,090 - INFO - uvicorn.access - 2a06:61c1:c558:4000:7128:b31a:33ce:e358:0 - "POST /login HTTP/1.1" 401
+2026-01-04 16:19:24,894 - INFO - uvicorn.access - 2a06:61c1:c558:4000:7128:b31a:33ce:e358:0 - "POST /login HTTP/1.1" 401
+2026-01-04 16:23:30,215 - INFO - uvicorn.access - 2a06:61c1:c558:4000:7128:b31a:33ce:e358:0 - "POST /login HTTP/1.1" 401
+2026-01-04 16:28:57,461 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /register HTTP/1.1" 200
+2026-01-04 16:29:13,715 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation started
+2026-01-04 16:29:13,719 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-04 16:34:58,070 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation started
+2026-01-04 16:34:58,070 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-04 16:37:12,265 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation ended
+2026-01-04 16:37:12,266 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/end HTTP/1.1" 200
+2026-01-04 16:37:48,366 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation started
+2026-01-04 16:37:48,367 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-04 16:39:20,949 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation ended
+2026-01-04 16:39:20,950 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/end HTTP/1.1" 200
