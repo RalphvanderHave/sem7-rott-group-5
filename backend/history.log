@@ -255,3 +255,126 @@
 2026-01-04 16:37:48,367 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/start HTTP/1.1" 200
 2026-01-04 16:39:20,949 - INFO - conversation - User: hilaryjordaan.uk@gmail.com - Conversation ended
 2026-01-04 16:39:20,950 - INFO - uvicorn.access - 2a06:61c1:c558:0:7592:5e96:bb38:115a:0 - "POST /conversation/end HTTP/1.1" 200
+2026-01-06 19:42:36,640 - INFO - uvicorn.error - Will watch for changes in these directories: ['C:\\Users\\Notebook\\Downloads\\code\\sem7-rott-group-5\\backend']
+2026-01-06 19:42:36,640 - INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2026-01-06 19:42:36,641 - INFO - uvicorn.error - Started reloader process [1292] using StatReload
+2026-01-06 19:42:37,556 - DEBUG - asyncio - Using selector: SelectSelector
+2026-01-06 19:43:49,056 - INFO - uvicorn.error - Started server process [6924]
+2026-01-06 19:43:49,056 - INFO - uvicorn.error - Waiting for application startup.
+2026-01-06 19:43:49,072 - INFO - sentence_transformers.SentenceTransformer - Use pytorch device_name: cpu
+2026-01-06 19:43:49,072 - INFO - sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 19:43:49,072 - DEBUG - urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443
+2026-01-06 19:43:49,764 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2026-01-06 19:43:49,779 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2026-01-06 19:43:49,927 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2026-01-06 19:43:49,943 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2026-01-06 19:43:50,068 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/1.1" 307 0
+2026-01-06 19:43:50,068 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json HTTP/1.1" 200 0
+2026-01-06 19:43:50,177 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md HTTP/1.1" 307 0
+2026-01-06 19:43:50,193 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md HTTP/1.1" 200 0
+2026-01-06 19:43:50,349 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json HTTP/1.1" 307 0
+2026-01-06 19:43:50,365 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json HTTP/1.1" 200 0
+2026-01-06 19:43:50,567 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/1.1" 307 0
+2026-01-06 19:43:50,598 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json HTTP/1.1" 200 0
+2026-01-06 19:43:50,731 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2026-01-06 19:43:50,837 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json HTTP/1.1" 307 0
+2026-01-06 19:43:50,855 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json HTTP/1.1" 200 0
+2026-01-06 19:43:51,192 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/1.1" 307 0
+2026-01-06 19:43:51,223 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json HTTP/1.1" 200 0
+2026-01-06 19:43:51,364 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 64
+2026-01-06 19:43:51,473 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=True&expand=False HTTP/1.1" 200 6465
+2026-01-06 19:43:51,666 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json HTTP/1.1" 307 0
+2026-01-06 19:43:51,682 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "HEAD /api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json HTTP/1.1" 200 0
+2026-01-06 19:43:51,807 - DEBUG - urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/sentence-transformers/all-MiniLM-L6-v2 HTTP/1.1" 200 6881
+2026-01-06 19:44:04,356 - INFO - uvicorn.error - Application startup complete.
+2026-01-08 19:55:28,551 - INFO - uvicorn.access - 89.200.43.234:0 - "POST /login HTTP/1.1" 200
+2026-01-10 00:15:56,859 - INFO - conversation - User: m.kbn - Conversation started
+2026-01-10 00:15:56,859 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-10 00:20:33,704 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:23:30,738 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:26:14,514 - INFO - conversation - User: m.kbn - Conversation started
+2026-01-10 00:26:14,514 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-10 00:26:23,716 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:26:34,703 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:27:28,152 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-10 00:28:25,023 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:29:09,196 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-10 00:29:53,699 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-10 00:35:44,992 - INFO - conversation - User: m.kbn - Conversation ended
+2026-01-10 00:35:44,992 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/end HTTP/1.1" 200
+# Funnel on:
+#     - https://desktop-gl4mk9o.tailb2509f.ts.net
+
+https://desktop-gl4mk9o.tailb2509f.ts.net (Funnel on)
+|-- /        proxy http://localhost:5173
+|-- /backend proxy http://localhost:3000
+
+
+[DEBUG] 89.200.43.234 POST /login -> 200 (74.0 ms)
+[DEBUG] 188.91.49.130 POST /conversation/start -> 200 (4.1 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '70', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'mkbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.83it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (438.9 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '70', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'mkbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 21.34it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (54.3 ms)
+[DEBUG] 188.91.49.130 POST /conversation/start -> 200 (3.7 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 24.84it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (49.0 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (17.1 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '195', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'text': 'User had a difficult childhood with transitions between the Netherlands and Turkey. User wants to write a book about their experiences.', 'tags': ['event', 'family'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 29.57it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (90.0 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.99it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (37.4 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '157', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'text': 'User wants to write a book about loneliness and is open to ideas and guidance on how to approach the topic.', 'tags': ['event'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 31.34it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (61.8 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.97it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (21.7 ms)
+[DEBUG] 188.91.49.130 POST /conversation/end -> 200 (4.2 ms)
