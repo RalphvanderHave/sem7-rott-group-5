@@ -378,3 +378,9 @@ Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 't
 Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.97it/s]
 [DEBUG] 34.59.11.47 POST /mem0/search -> 200 (21.7 ms)
 [DEBUG] 188.91.49.130 POST /conversation/end -> 200 (4.2 ms)
+2026-01-10 22:43:00,484 - INFO - conversation - User: gksl.krkz - Conversation started
+2026-01-10 22:43:00,484 - INFO - uvicorn.access - 2a02:26f7:f98c:4a40:0:c000:0:6:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-10 22:45:15,826 - INFO - conversation - User: gksl.krkz - Conversation started
+2026-01-10 22:45:15,826 - INFO - uvicorn.access - 2a02:26f7:f980:4a40:0:2000:0:12:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-10 22:56:39,303 - INFO - conversation - User: gksl.krkz - Conversation started
+2026-01-10 22:56:39,303 - INFO - uvicorn.access - 2a09:bac3:4d80:2e3c::49b:35:0 - "POST /conversation/start HTTP/1.1" 200
