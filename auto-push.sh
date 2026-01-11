@@ -1,0 +1,3 @@
+git add.
+git commit -m "Auto commit: %date%-%time%"
+git push origin release/V1.2
