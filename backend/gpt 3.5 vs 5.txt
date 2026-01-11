@@ -1,0 +1,161 @@
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.83it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (438.9 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '70', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'mkbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 21.34it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (54.3 ms)
+[DEBUG] 188.91.49.130 POST /conversation/start -> 200 (3.7 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 24.84it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (49.0 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (17.1 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '195', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'text': 'User had a difficult childhood with transitions between the Netherlands and Turkey. User wants to write a book about their experiences.', 'tags': ['event', 'family'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 29.57it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (90.0 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.99it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (37.4 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '157', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'text': 'User wants to write a book about loneliness and is open to ideas and guidance on how to approach the topic.', 'tags': ['event'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 31.34it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (61.8 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '71', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'm.kbn', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.97it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (21.7 ms)
+[DEBUG] 188.91.49.130 POST /conversation/end -> 200 (4.2 ms)
+[DEBUG] 2a02:26f7:f98c:4a40:0:c000:0:6 POST /conversation/start -> 200 (11.5 ms)
+[DEBUG] 2a02:26f7:f980:4a40:0:2000:0:12 POST /conversation/start -> 200 (1.8 ms)
+[DEBUG] 2a09:bac3:4d80:2e3c::49b:35 POST /conversation/start -> 200 (1.4 ms)
+[DEBUG] 188.91.49.130 POST /register -> 200 (68.5 ms)
+[DEBUG] 188.91.49.130 POST /conversation/start -> 200 (1.2 ms)
+[DEBUG] 85.144.194.74 POST /conversation/start -> 200 (1.4 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '72', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  3.51it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (329.1 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '93', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'text': "User's cat Pee Pee is now six months old.", 'tags': ['family'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 32.00it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (68.7 ms)
+
+[REQ] /mem0/add -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '80', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'text': "User's wife is 36 years old.", 'tags': ['family'], 'ts': None}
+[REQ END] -----------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 50.35it/s]
+[DEBUG] 34.59.11.47 POST /mem0/add -> 200 (44.8 ms)
+
+[REQ] /mem0/auto -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '72', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'utterance': 'Ik heb vandaag een goede dag gehad.', 'suggest_text': None, 'suggest_tags': None, 'dedupe_threshold': 0.9}
+[REQ END] ------------------------
+
+[AUTO] skip (not-worthy) user=jiawei text='Ik heb vandaag een goede dag gehad.'
+[DEBUG] 34.59.11.47 POST /mem0/auto -> 200 (4.4 ms)
+
+[REQ] /mem0/auto -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '59', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'utterance': 'Ik voelde wel eenzaam.', 'suggest_text': None, 'suggest_tags': None, 'dedupe_threshold': 0.9}
+[REQ END] ------------------------
+
+[AUTO] skip (not-worthy) user=jiawei text='Ik voelde wel eenzaam.'
+[DEBUG] 34.59.11.47 POST /mem0/auto -> 200 (2.4 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '70', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'query': 'favorite actor in Saving Private Ryan', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 63.99it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (30.4 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '62', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'query': 'actors in Saving Private Ryan', 'top_k': 5}
+[REQ END] ------------------------
+
+
+
+
+# ######agent gpt 5.0#######
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 21.27it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (51.2 ms)
+[DEBUG] 85.144.194.74 POST /conversation/end -> 200 (1.2 ms)
+[DEBUG] 85.144.194.74 POST /conversation/start -> 200 (12.2 ms)
+
+[REQ] /mem0/auto -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '58', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'utterance': 'Vertel eens over mij.', 'suggest_text': None, 'suggest_tags': None, 'dedupe_threshold': 0.9}
+[REQ END] ------------------------
+
+[AUTO] skip (not-worthy) user=jiawei text='Vertel eens over mij.'
+[DEBUG] 34.59.11.47 POST /mem0/auto -> 200 (6.9 ms)
+
+[REQ] /mem0/search -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '72', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'query': 'personal facts, preferences, and habits', 'top_k': 5}
+[REQ END] ------------------------
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 32.01it/s]
+[DEBUG] 34.59.11.47 POST /mem0/search -> 200 (62.8 ms)
+
+[REQ] /mem0/auto -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '76', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'utterance': 'Ik voel toen nu engzaam wat ik dan doe.', 'suggest_text': None, 'suggest_tags': None, 'dedupe_threshold': 0.9}
+[REQ END] ------------------------
+
+[AUTO] skip (not-worthy) user=jiawei text='Ik voel toen nu engzaam wat ik dan doe.'
+[DEBUG] 34.59.11.47 POST /mem0/auto -> 200 (2.5 ms)
+
+[REQ] /mem0/auto -----------------
+Headers: {'host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'user-agent': 'ElevenLabs/1.0', 'content-length': '126', 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'authorization': 'Bearer secret123', 'content-type': 'application/json', 'tailscale-funnel-request': '?1', 'x-forwarded-for': '34.59.11.47', 'x-forwarded-host': 'desktop-gl4mk9o.tailb2509f.ts.net', 'x-forwarded-proto': 'https'}
+Body: {'userId': 'jiawei', 'utterance': 'Ik zeg muziek. Ik wil muziek luisteren, maar ik weet niet waarom ik muziek zou luisteren.', 'suggest_text': None, 'suggest_tags': None, 'dedupe_threshold': 0.9}
+[REQ END] ------------------------
+
+[AUTO] skip (not-worthy) user=jiawei text='Ik zeg muziek. Ik wil muziek luisteren, maar ik weet niet waarom ik muziek zou l'
+[DEBUG] 34.59.11.47 POST /mem0/auto -> 200 (3.7 ms)
+[DEBUG] 85.144.194.74 POST /conversation/end -> 200 (2.7 ms)

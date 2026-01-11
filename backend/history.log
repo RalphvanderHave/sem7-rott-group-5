@@ -398,3 +398,11 @@ Batches: 100%|██████████████████████
 2026-01-11 20:54:28,855 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
 2026-01-11 20:57:30,852 - INFO - conversation - User: jiawei - Conversation ended
 2026-01-11 20:57:30,852 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/end HTTP/1.1" 200
+2026-01-11 21:45:31,131 - INFO - conversation - User: jiawei - Conversation started
+2026-01-11 21:45:31,131 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-11 21:45:45,009 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:45:46,419 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 21:46:13,469 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:47:42,215 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:48:14,544 - INFO - conversation - User: jiawei - Conversation ended
+2026-01-11 21:48:14,544 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/end HTTP/1.1" 200
