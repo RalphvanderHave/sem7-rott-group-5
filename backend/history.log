@@ -384,3 +384,17 @@ Batches: 100%|██████████████████████
 2026-01-10 22:45:15,826 - INFO - uvicorn.access - 2a02:26f7:f980:4a40:0:2000:0:12:0 - "POST /conversation/start HTTP/1.1" 200
 2026-01-10 22:56:39,303 - INFO - conversation - User: gksl.krkz - Conversation started
 2026-01-10 22:56:39,303 - INFO - uvicorn.access - 2a09:bac3:4d80:2e3c::49b:35:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-11 16:44:52,593 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /register HTTP/1.1" 200
+2026-01-11 16:52:37,890 - INFO - conversation - User: kdr.msr - Conversation started
+2026-01-11 16:52:37,890 - INFO - uvicorn.access - 188.91.49.130:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-11 20:50:33,918 - INFO - conversation - User: jiawei - Conversation started
+2026-01-11 20:50:33,918 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-11 20:50:47,762 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 20:51:04,562 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 20:51:19,048 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 20:51:33,736 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 20:51:53,062 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 20:53:53,884 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 20:54:28,855 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 20:57:30,852 - INFO - conversation - User: jiawei - Conversation ended
+2026-01-11 20:57:30,852 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/end HTTP/1.1" 200
