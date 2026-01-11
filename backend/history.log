@@ -406,3 +406,24 @@ Batches: 100%|██████████████████████
 2026-01-11 21:47:42,215 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
 2026-01-11 21:48:14,544 - INFO - conversation - User: jiawei - Conversation ended
 2026-01-11 21:48:14,544 - INFO - uvicorn.access - 85.144.194.74:0 - "POST /conversation/end HTTP/1.1" 200
+2026-01-11 21:51:24,297 - INFO - uvicorn.access - 83.232.63.32:0 - "POST /register HTTP/1.1" 409
+2026-01-11 21:51:32,850 - INFO - uvicorn.access - 83.232.63.32:0 - "POST /login HTTP/1.1" 401
+2026-01-11 21:51:40,768 - INFO - uvicorn.access - 83.232.63.32:0 - "POST /login HTTP/1.1" 200
+2026-01-11 21:51:45,675 - INFO - conversation - User: ralph - Conversation started
+2026-01-11 21:51:45,675 - INFO - uvicorn.access - 83.232.63.32:0 - "POST /conversation/start HTTP/1.1" 200
+2026-01-11 21:52:46,417 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:52:47,974 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 21:53:06,205 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:53:07,540 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 21:53:48,429 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:53:50,399 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 21:54:22,742 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:54:24,593 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 21:55:18,047 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:55:19,730 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 21:55:42,648 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:55:44,135 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/search HTTP/1.1" 200
+2026-01-11 21:55:59,852 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:56:01,136 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
+2026-01-11 21:56:29,186 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/auto HTTP/1.1" 200
+2026-01-11 21:56:30,797 - INFO - uvicorn.access - 34.59.11.47:0 - "POST /mem0/add HTTP/1.1" 200
